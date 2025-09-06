@@ -12,7 +12,7 @@ import {
   AskBenny
 } from '@/components/pages/PlaceholderPages'
 import { DigitalContentManager } from './components/pages/DigitalContentManager'
-import { DocuGenPage } from './components/pages/DocuGenPage'
+import { MedicareEOCMasterList } from './components/pages/MedicareEOCMasterList'
 
 function App() {
   const [currentPage, setCurrentPage] = useKV('sda-current-page', 'dashboard')
@@ -23,12 +23,10 @@ function App() {
       case 'dashboard':
         return <Dashboard onNavigate={setCurrentPage} />
       case 'global-template':
-        return <DocuGenPage onNavigate={function (page: string): void {
+        return <MedicareEOCMasterList onNavigate={function (page: string): void {
           throw new Error('Function not implemented.')
         } } />
-      case 'master-list':
-        return <MasterList />
-      case 'collaborate':
+        case 'collaborate':
         return <Collaborate />
       case 'generate':
         return <Generate />
