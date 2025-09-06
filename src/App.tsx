@@ -1,39 +1,66 @@
 import { useState } from 'react'
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
-import Sidebar from './components/Sidebar'
-import Dashboard from './pages'
-import GlobalTemplate from './GlobalTemplate'
-import DigitalContentManager from './DigitalContentManager'
-import Collaborate from './Collaborate'
-import Generate from './Generate'
-import Integrate from './Integrate'
-import AdminSettings from './AdminSettings'
-import DesignStudio from './DesignStudio'
+import { useKV } from '@github/spark/hooks'
+import { Navigation } from '@/components/Navigation'
+import { Dashboard } from '@/components/pages/Dashboard'
+import { 
+  MasterList, 
+  Collaborate, 
+  Generate, 
+  Publish, 
+  AdminSettings, 
+  DesignStudio,
+  AskBenny
+} from '@/components/pages/PlaceholderPages'
+import { DigitalContentManager } from './components/pages/DigitalContentManager'
+import { DocuGenPage } from './components/pages/DocuGenPage'
 
 function App() {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useKV('sda-current-page', 'dashboard')
+  const [isCollapsed, setIsCollapsed] = useKV('sda-sidebar-collapsed', false)
+
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <Dashboard onNavigate={setCurrentPage} />
+      case 'global-template':
+        return <DocuGenPage onNavigate={function (page: string): void {
+          throw new Error('Function not implemented.')
+        } } />
+      case 'master-list':
+        return <MasterList />
+      case 'collaborate':
+        return <Collaborate />
+      case 'generate':
+        return <Generate />
+      case 'publish':
+        return <Publish />
+      case 'ask-benny':
+        return <AskBenny />
+      case 'admin-settings':
+        return <AdminSettings />
+      case 'design-studio':
+        return <DesignStudio />
+      case 'dcm':
+        return <DigitalContentManager onNavigate={function (page: string): void {
+          throw new Error('Function not implemented.')
+        } } />
+      default:
+        return <Dashboard onNavigate={setCurrentPage} />
+    }
+  }
 
   return (
-    <Router>
-      <div className="flex min-h-screen bg-background">
-        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-        <div className="flex-1 lg:ml-64">
-          <div className="p-6">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/global-template" element={<GlobalTemplate />} />
-              <Route path="/digital-content-manager" element={<DigitalContentManager />} />
-              <Route path="/collaborate" element={<Collaborate />} />
-              <Route path="/generate" element={<Generate />} />
-              <Route path="/integrate" element={<Integrate />} />
-              <Route path="/admin-settings" element={<AdminSettings />} />
-              <Route path="/design-studio" element={<DesignStudio />} />
-            </Routes>
-          </div>
-        </div>
-      </div>
-    </Router>
+    <div className="flex h-screen bg-background">
+      <Navigation 
+        currentPage={currentPage}
+        onNavigate={setCurrentPage}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={() => setIsCollapsed(!isCollapsed)}
+      />
+      <main className="flex-1 overflow-auto">
+        {renderCurrentPage()}
+      </main>
+    </div>
   )
 }
 

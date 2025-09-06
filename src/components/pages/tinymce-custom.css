@@ -1,0 +1,74 @@
+/* TinyMCE custom styles for better integration */
+.tox .tox-editor-container {
+  border-radius: 6px !important;
+}
+
+.tox .tox-toolbar-overlord {
+  border-top-left-radius: 6px !important;
+  border-top-right-radius: 6px !important;
+}
+
+.tox .tox-edit-area {
+  border-bottom-left-radius: 6px !important;
+  border-bottom-right-radius: 6px !important;
+}
+
+.tox .tox-statusbar {
+  border-bottom-left-radius: 6px !important;
+  border-bottom-right-radius: 6px !important;
+}
+
+/* Focus states */
+.tox:focus-within {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+  border-color: #3b82f6 !important;
+}
+
+/* Custom button styles for better visual hierarchy */
+.tox .tox-tbtn {
+  border-radius: 4px !important;
+  margin: 1px !important;
+}
+
+.tox .tox-tbtn:hover {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.tox .tox-tbtn--enabled {
+  background-color: rgba(59, 130, 246, 0.2) !important;
+}
+
+/* Menu styles */
+.tox .tox-menu {
+  border-radius: 6px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Dialog styles */
+.tox .tox-dialog {
+  border-radius: 8px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Better scrollbar styling */
+.tox .tox-edit-area iframe {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f9fafb;
+}
+
+.tox .tox-edit-area iframe::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tox .tox-edit-area iframe::-webkit-scrollbar-track {
+  background: #f9fafb;
+}
+
+.tox .tox-edit-area iframe::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.tox .tox-edit-area iframe::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
