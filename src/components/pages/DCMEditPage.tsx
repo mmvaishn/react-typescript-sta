@@ -149,7 +149,7 @@ export function DCMEditPage({ rule, onNavigate, onSave, mode }: DCMEditPageProps
       }
 
       toast.success(`Rule ${mode === 'create' ? 'created' : 'updated'} successfully!`);
-      onNavigate('digital-content-manager');
+      onNavigate('dcm');
     } catch (error) {
       console.error('Error saving rule:', error);
       toast.error('Failed to save rule');
@@ -211,7 +211,7 @@ export function DCMEditPage({ rule, onNavigate, onSave, mode }: DCMEditPageProps
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onNavigate('digital-content-manager')}
+              onClick={() => onNavigate('dcm')}
               className="flex items-center gap-2"
             >
               <ArrowLeft size={16} />
@@ -259,24 +259,27 @@ export function DCMEditPage({ rule, onNavigate, onSave, mode }: DCMEditPageProps
       </div>
 
       {/* Main Content */}
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="p-8 max-w-7xl mx-auto">
         {/* Rule Information Section */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText size={20} />
+        <Card className="mb-8 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <FileText size={20} className="text-primary" />
               Rule Information
             </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Define the core details for this rule
+            </p>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-8">
             {/* First Row */}
-            <div className="grid grid-cols-4 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="benefitCategory" className="text-sm font-medium">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="space-y-3">
+                <Label htmlFor="benefitCategory" className="text-sm font-medium text-foreground">
                   Benefit Category <span className="text-red-500">*</span>
                 </Label>
                 <Select value={formData.templateName || 'Fitness Rider'} onValueChange={(value) => handleInputChange('templateName', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -290,12 +293,12 @@ export function DCMEditPage({ rule, onNavigate, onSave, mode }: DCMEditPageProps
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="benefitType" className="text-sm font-medium">
+              <div className="space-y-3">
+                <Label htmlFor="benefitType" className="text-sm font-medium text-foreground">
                   Benefit Type <span className="text-red-500">*</span>
                 </Label>
                 <Select value={formData.benefitType || 'Out of Pocket Maximum'} onValueChange={(value) => handleInputChange('benefitType', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="Select type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -308,12 +311,12 @@ export function DCMEditPage({ rule, onNavigate, onSave, mode }: DCMEditPageProps
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="businessArea" className="text-sm font-medium">
+              <div className="space-y-3">
+                <Label htmlFor="businessArea" className="text-sm font-medium text-foreground">
                   Business Area <span className="text-red-500">*</span>
                 </Label>
                 <Select value={formData.businessArea || 'Marketing'} onValueChange={(value) => handleInputChange('businessArea', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="Select area" />
                   </SelectTrigger>
                   <SelectContent>
@@ -326,12 +329,12 @@ export function DCMEditPage({ rule, onNavigate, onSave, mode }: DCMEditPageProps
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="subBusinessArea" className="text-sm font-medium">
+              <div className="space-y-3">
+                <Label htmlFor="subBusinessArea" className="text-sm font-medium text-foreground">
                   Sub-business Area <span className="text-red-500">*</span>
                 </Label>
                 <Select value={formData.subBusinessArea || 'MRK: DNSP'} onValueChange={(value) => handleInputChange('subBusinessArea', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue placeholder="Select sub-area" />
                   </SelectTrigger>
                   <SelectContent>
@@ -346,13 +349,13 @@ export function DCMEditPage({ rule, onNavigate, onSave, mode }: DCMEditPageProps
             </div>
 
             {/* Second Row */}
-            <div className="grid grid-cols-4 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="planYear" className="text-sm font-medium">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="space-y-3">
+                <Label htmlFor="planYear" className="text-sm font-medium text-foreground">
                   Plan Year <span className="text-red-500">*</span>
                 </Label>
                 <Select value="2026" onValueChange={(value) => handleInputChange('version', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -364,36 +367,36 @@ export function DCMEditPage({ rule, onNavigate, onSave, mode }: DCMEditPageProps
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="effectiveStartDate" className="text-sm font-medium">
+              <div className="space-y-3">
+                <Label htmlFor="effectiveStartDate" className="text-sm font-medium text-foreground">
                   Content Effective Start Date <span className="text-red-500">*</span>
                 </Label>
                 <DatePicker
                   date={formatDateForDisplay(formData.effectiveDate)}
                   onDateChange={handleDateChange}
                   placeholder="01-01-2026"
-                  className="w-full"
+                  className="w-full h-10"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="effectiveEndDate" className="text-sm font-medium">
+              <div className="space-y-3">
+                <Label htmlFor="effectiveEndDate" className="text-sm font-medium text-foreground">
                   Content Effective End Date <span className="text-red-500">*</span>
                 </Label>
                 <DatePicker
                   date={new Date(2026, 11, 31)} // December 31, 2026
                   onDateChange={() => {}} // Read-only for now
                   placeholder="31-12-2026"
-                  className="w-full"
+                  className="w-full h-10"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="description" className="text-sm font-medium">
+              <div className="space-y-3">
+                <Label htmlFor="description" className="text-sm font-medium text-foreground">
                   Description <span className="text-red-500">*</span>
                 </Label>
                 <Select value="Headline" onValueChange={(value) => handleInputChange('description', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -407,13 +410,13 @@ export function DCMEditPage({ rule, onNavigate, onSave, mode }: DCMEditPageProps
             </div>
 
             {/* Third Row */}
-            <div className="grid grid-cols-4 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="networkType" className="text-sm font-medium">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="space-y-3">
+                <Label htmlFor="networkType" className="text-sm font-medium text-foreground">
                   Network Type <span className="text-red-500">*</span>
                 </Label>
                 <Select value="INN" onValueChange={(value) => handleInputChange('serviceGroup', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-10">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -428,30 +431,38 @@ export function DCMEditPage({ rule, onNavigate, onSave, mode }: DCMEditPageProps
         </Card>
 
         {/* Rule Key Section */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <MapPin size={20} />
+        <Card className="mb-8 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <MapPin size={20} className="text-primary" />
               Rule Key <span className="text-red-500">*</span>
             </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Define the key that identifies which plans this rule applies to
+            </p>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <Textarea
-                value={formData.key || 'Medicare|Acupuncture|Package|='}
-                onChange={(e) => handleInputChange('key', e.target.value)}
-                placeholder="Enter rule key"
-                className="min-h-[60px] font-mono text-sm"
-              />
-              <div className="flex items-center gap-4 text-sm text-muted-foreground">
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <Label htmlFor="ruleKey" className="text-sm font-medium text-foreground">
+                  Rule Key Expression
+                </Label>
+                <Textarea
+                  value={formData.key || 'Medicare|Acupuncture|Package|='}
+                  onChange={(e) => handleInputChange('key', e.target.value)}
+                  placeholder="Enter rule key"
+                  className="min-h-[80px] font-mono text-sm resize-none"
+                />
+              </div>
+              <div className="flex items-center gap-4 text-sm">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-blue-600 border-blue-200">
-                    Affected Individual Plans: 5
+                  <Badge variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">
+                    Individual Plans: 5
                   </Badge>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-green-600 border-green-200">
-                    Affected Group Plans: 0
+                  <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
+                    Group Plans: 0
                   </Badge>
                 </div>
               </div>
@@ -459,11 +470,20 @@ export function DCMEditPage({ rule, onNavigate, onSave, mode }: DCMEditPageProps
           </CardContent>
         </Card>
 
-        {/* Language Selection */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
+        {/* Content Template & Preview Section */}
+        <Card className="mb-8 shadow-sm">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Globe size={20} className="text-primary" />
+              Content Template & Preview
+            </CardTitle>
+            <p className="text-sm text-muted-foreground">
+              Configure content templates and preview across different plans
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-8">
             <div className="flex items-center gap-4 mb-6">
-              <Button variant="default" size="sm" className="bg-blue-600 text-white">
+              <Button variant="default" size="sm" className="bg-blue-600 text-white hover:bg-blue-700">
                 English
               </Button>
               <Button variant="outline" size="sm">
@@ -475,21 +495,21 @@ export function DCMEditPage({ rule, onNavigate, onSave, mode }: DCMEditPageProps
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Content Template */}
               <div className="space-y-4">
-                <Label className="text-sm font-medium">Content Template</Label>
-                <div className="grid grid-cols-4 gap-2">
-                  <Button variant="outline" size="sm" className="h-8 text-xs">
+                <Label className="text-sm font-medium text-foreground">Content Template</Label>
+                <div className="grid grid-cols-4 gap-3">
+                  <Button variant="outline" size="sm" className="h-9 text-xs font-mono">
                     ()
                   </Button>
-                  <Button variant="outline" size="sm" className="h-8 text-xs">
+                  <Button variant="outline" size="sm" className="h-9 text-xs font-mono">
                     III
                   </Button>
-                  <Button variant="outline" size="sm" className="h-8 text-xs">
+                  <Button variant="outline" size="sm" className="h-9 text-xs font-mono">
                     Ⅱ()
                   </Button>
-                  <Button variant="outline" size="sm" className="h-8 text-xs">
+                  <Button variant="outline" size="sm" className="h-9 text-xs font-mono">
                     ()
                   </Button>
                 </div>
@@ -498,22 +518,24 @@ export function DCMEditPage({ rule, onNavigate, onSave, mode }: DCMEditPageProps
               {/* Content Preview */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <Label className="text-sm font-medium">Content Preview</Label>
-                  <Button variant="link" size="sm" className="text-blue-600 text-xs">
+                  <Label className="text-sm font-medium text-foreground">Content Preview</Label>
+                  <Button variant="link" size="sm" className="text-blue-600 text-xs hover:text-blue-800">
                     View Plan Eligibility
                   </Button>
                 </div>
                 <Select value="" onValueChange={() => {}}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Plan" />
+                  <SelectTrigger className="h-10">
+                    <SelectValue placeholder="Select Plan to Preview" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="plan1">Plan 1</SelectItem>
-                    <SelectItem value="plan2">Plan 2</SelectItem>
+                    <SelectItem value="plan1">Plan 1 - Medicare Advantage</SelectItem>
+                    <SelectItem value="plan2">Plan 2 - Medicare Supplement</SelectItem>
                   </SelectContent>
                 </Select>
-                <div className="bg-muted p-4 rounded-md text-sm text-muted-foreground">
-                  Select a plan and click Apply to preview content.
+                <div className="bg-muted/50 p-6 rounded-md border-2 border-dashed border-muted-foreground/20">
+                  <p className="text-sm text-muted-foreground text-center">
+                    Select a plan and click Apply to preview content rendering
+                  </p>
                 </div>
               </div>
             </div>

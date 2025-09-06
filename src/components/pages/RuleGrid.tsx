@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { ColumnFilter } from '@/components/pages/ColumnFilter';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { HtmlRichTextEditor } from '@/components/pages/HtmlRichTextEditor';
-import { CreateRuleDialog } from '@/components/pages/CreateRuleDialog';
 import { DatePicker } from '@/components/ui/date-picker';
 import { format, parse, isValid } from 'date-fns';
 import { 
@@ -36,9 +35,10 @@ interface RuleGridProps {
   onRuleDelete: (ruleId: string) => void;
   onEditRule: (rule: RuleData) => void;
   onCreateRule?: () => void;
+  onNavigate?: (page: string) => void;
 }
 
-export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEditRule, onCreateRule }: RuleGridProps) {
+export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEditRule, onCreateRule, onNavigate }: RuleGridProps) {
   // Ensure rules is always an array to prevent .map errors
   const safeRules = Array.isArray(rules) ? rules : [];
   
@@ -48,7 +48,6 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [richTextEditorOpen, setRichTextEditorOpen] = useState(false);
   const [currentEditingRule, setCurrentEditingRule] = useState<RuleData | null>(null);
-  const [createRuleDialogOpen, setCreateRuleDialogOpen] = useState(false);
   
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -241,63 +240,15 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   // Handle new rule creation
   const handleCreateNewRule = () => {
     if (onCreateRule) {
-      // Navigate to the new rule details page
+      // Use the provided onCreateRule callback (for backwards compatibility)
       onCreateRule();
+    } else if (onNavigate) {
+      // Navigate to the create rule page
+      onNavigate('create-rule');
     } else {
-      // Open the Create Rule dialog
-      setCreateRuleDialogOpen(true);
+      // Show error since no navigation method is available
+      toast.error('Unable to create new rule - navigation not configured');
     }
-  };
-
-  // Handle saving new rule from dialog
-  const handleSaveNewRule = (ruleData: any) => {
-    const newRuleId = generateUniqueRuleId();
-    const currentDate = new Date();
-    
-    const newRule: RuleData = {
-      id: `rule-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      ruleId: newRuleId,
-      effectiveDate: ruleData.contentEffectiveStartDate || formatDateForStorage(new Date(2025, 0, 1)),
-      version: '1.0',
-      benefitType: ruleData.benefitType || '',
-      businessArea: ruleData.businessArea || '',
-      subBusinessArea: ruleData.subBusinessArea || '',
-      description: ruleData.description || '',
-      templateName: '',
-      serviceId: '',
-      cmsRegulated: false,
-      chapterName: '',
-      sectionName: '',
-      subsectionName: '',
-      serviceGroup: '',
-      sourceMapping: '',
-      tiers: '',
-      key: ruleData.generatedKey || '',
-      rule: ruleData.aiSuggestionText || '',
-      isTabular: false,
-      english: '',
-      englishStatus: 'Draft',
-      spanish: '',
-      spanishStatus: 'Draft',
-      published: false,
-      createdAt: currentDate,
-      lastModified: currentDate
-    };
-
-    onRuleCreate(newRule);
-
-    // Log the new rule creation activity
-    if ((window as any).addActivityLog) {
-      (window as any).addActivityLog({
-        user: 'Current User',
-        action: 'create',
-        target: `Rule ${newRuleId}`,
-        details: `Created new rule with auto-generated ID: ${newRuleId}`,
-        ruleId: newRuleId,
-      });
-    }
-
-    toast.success(`New rule created with ID: ${newRuleId}`);
   };
 
   // Pagination handlers
@@ -1419,13 +1370,6 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
           </DialogContent>
         </Dialog>
       )}
-
-      {/* Create Rule Dialog */}
-      <CreateRuleDialog
-        isOpen={createRuleDialogOpen}
-        onClose={() => setCreateRuleDialogOpen(false)}
-        onSave={handleSaveNewRule}
-      />
     </div>
   );
 }

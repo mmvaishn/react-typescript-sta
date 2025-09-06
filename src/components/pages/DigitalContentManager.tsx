@@ -281,6 +281,7 @@ export function DigitalContentManager({ onNavigate, onEditRule }: DigitalContent
           onRuleCreate={handleRuleCreate}
           onRuleDelete={handleRuleDelete}
           onEditRule={onEditRule || (() => {})}
+          onNavigate={onNavigate}
         />
       </div>
 
