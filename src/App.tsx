@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
-import Dashboard from './pages.tsx'
+import Dashboard from './pages'
 import GlobalTemplate from './GlobalTemplate'
 import DigitalContentManager from './DigitalContentManager'
 import Collaborate from './Collaborate'
