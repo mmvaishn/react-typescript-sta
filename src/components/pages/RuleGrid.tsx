@@ -49,9 +49,9 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   const [richTextEditorOpen, setRichTextEditorOpen] = useState(false);
   const [currentEditingRule, setCurrentEditingRule] = useState<RuleData | null>(null);
   
-  // Pagination state
+  // Pagination state - default to 50 for better performance with large datasets
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
+  const [pageSize, setPageSize] = useState(50);
   
   // Column-specific filters state
   const [columnFilters, setColumnFilters] = useState({
@@ -161,6 +161,52 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     setCurrentPage(1);
   }, [columnFilters]);
 
+  // Keyboard navigation for pagination
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle pagination keys when not editing and no input is focused
+      const activeElement = document.activeElement;
+      const isInputFocused = activeElement && (
+        activeElement.tagName === 'INPUT' ||
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.tagName === 'SELECT' ||
+        activeElement.contentEditable === 'true'
+      );
+      
+      if (isInputFocused || editingRule) return;
+
+      switch (event.key) {
+        case 'ArrowLeft':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            handlePreviousPage();
+          }
+          break;
+        case 'ArrowRight':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            handleNextPage();
+          }
+          break;
+        case 'Home':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            handleFirstPage();
+          }
+          break;
+        case 'End':
+          if (event.ctrlKey || event.metaKey) {
+            event.preventDefault();
+            handleLastPage();
+          }
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [currentPage, totalPages, editingRule]);
+
   // Helper functions for date handling
   const formatDateForDisplay = (dateString: string): string => {
     if (!dateString) return '';
@@ -255,12 +301,66 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   const handlePageSizeChange = (newPageSize: string) => {
     setPageSize(parseInt(newPageSize));
     setCurrentPage(1);
+    
+    // Log pagination activity
+    if ((window as any).addActivityLog) {
+      (window as any).addActivityLog({
+        user: 'Current User',
+        action: 'view',
+        target: `Page Size`,
+        details: `Changed page size to ${newPageSize} rows per page`,
+      });
+    }
   };
 
-  const handleFirstPage = () => setCurrentPage(1);
-  const handleLastPage = () => setCurrentPage(totalPages);
-  const handlePreviousPage = () => setCurrentPage(Math.max(1, currentPage - 1));
-  const handleNextPage = () => setCurrentPage(Math.min(totalPages, currentPage + 1));
+  const handleFirstPage = () => {
+    setCurrentPage(1);
+    if ((window as any).addActivityLog) {
+      (window as any).addActivityLog({
+        user: 'Current User',
+        action: 'view',
+        target: `Pagination`,
+        details: `Navigated to first page`,
+      });
+    }
+  };
+  
+  const handleLastPage = () => {
+    setCurrentPage(totalPages);
+    if ((window as any).addActivityLog) {
+      (window as any).addActivityLog({
+        user: 'Current User',
+        action: 'view',
+        target: `Pagination`,
+        details: `Navigated to last page (${totalPages})`,
+      });
+    }
+  };
+  
+  const handlePreviousPage = () => {
+    const newPage = Math.max(1, currentPage - 1);
+    setCurrentPage(newPage);
+  };
+  
+  const handleNextPage = () => {
+    const newPage = Math.min(totalPages, currentPage + 1);
+    setCurrentPage(newPage);
+  };
+
+  const handlePageJump = (pageNumber: string) => {
+    const page = parseInt(pageNumber);
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      if ((window as any).addActivityLog) {
+        (window as any).addActivityLog({
+          user: 'Current User',
+          action: 'view',
+          target: `Pagination`,
+          details: `Jumped to page ${page}`,
+        });
+      }
+    }
+  };
 
 
   // Column filter handlers
@@ -293,7 +393,18 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
+      // Only select rules on the current page
       setSelectedRows(new Set(paginatedRules.map(r => r.id)));
+      
+      // Log the selection activity
+      if ((window as any).addActivityLog) {
+        (window as any).addActivityLog({
+          user: 'Current User',
+          action: 'view',
+          target: `Rule Selection`,
+          details: `Selected all ${paginatedRules.length} rules on current page`,
+        });
+      }
     } else {
       setSelectedRows(new Set());
     }
@@ -661,8 +772,23 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
       <div className="bg-white border border-gray-200 flex-shrink-0">
         <div className="px-6 py-3 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex items-center gap-4">
               <h2 className="text-base font-semibold text-gray-900">Digital Content Manager - ANOC-EOC</h2>
+              <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
+                {columnFilteredRules.length > 0 ? (
+                  <>
+                    Showing {startIndex + 1}-{endIndex} of {columnFilteredRules.length.toLocaleString()} rules
+                    {columnFilteredRules.length !== safeRules.length && (
+                      <span className="text-gray-400"> (filtered from {safeRules.length.toLocaleString()} total)</span>
+                    )}
+                    {selectedRows.size > 0 && (
+                      <span className="ml-2 text-blue-600 font-medium">• {selectedRows.size} selected</span>
+                    )}
+                  </>
+                ) : (
+                  'No rules found'
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-3">
               <Button 
@@ -719,6 +845,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                 <Checkbox 
                   checked={paginatedRules.length > 0 && selectedRows.size === paginatedRules.length}
                   onCheckedChange={handleSelectAll}
+                  title={`Select all ${paginatedRules.length} rules on current page`}
                 />
               </div>
               <div className="w-24 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
@@ -1186,33 +1313,41 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
           </div>
         </div>
 
-        {/* Pagination Controls */}
+        {/* Enhanced Pagination Controls */}
         <div className="bg-white border-t border-gray-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">Page Size</span>
+              <span className="text-sm text-gray-700">Rows per page:</span>
               <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
-                <SelectTrigger className="w-16 h-8 text-sm">
+                <SelectTrigger className="w-20 h-8 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
                   <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="40">40</SelectItem>
-                  <SelectItem value="60">60</SelectItem>
-                  <SelectItem value="80">80</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
                   <SelectItem value="100">100</SelectItem>
+                  <SelectItem value="200">200</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            <div className="text-sm text-gray-500">
+              {columnFilteredRules.length > 0 ? (
+                `${startIndex + 1}-${endIndex} of ${columnFilteredRules.length.toLocaleString()} rules`
+              ) : (
+                'No rules to display'
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={handleFirstPage}
               disabled={currentPage === 1 || columnFilteredRules.length === 0}
-              className="h-8 w-8 p-0 border-gray-300"
+              className="h-8 w-8 p-0 border-gray-300 hover:bg-gray-50"
+              title="First page (Ctrl+Home)"
             >
               <CaretDoubleLeft size={14} />
             </Button>
@@ -1221,21 +1356,33 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               size="sm"
               onClick={handlePreviousPage}
               disabled={currentPage === 1 || columnFilteredRules.length === 0}
-              className="h-8 w-8 p-0 border-gray-300"
+              className="h-8 w-8 p-0 border-gray-300 hover:bg-gray-50"
+              title="Previous page (Ctrl+←)"
             >
               <CaretLeft size={14} />
             </Button>
             
-            <span className="text-sm text-gray-700 px-3">
-              Page {currentPage} of {totalPages}
-            </span>
+            <div className="flex items-center gap-2 px-2">
+              <span className="text-sm text-gray-700">Page</span>
+              <Input
+                type="number"
+                min="1"
+                max={totalPages}
+                value={currentPage}
+                onChange={(e) => handlePageJump(e.target.value)}
+                className="w-16 h-8 text-sm text-center border-gray-300"
+                disabled={columnFilteredRules.length === 0}
+              />
+              <span className="text-sm text-gray-700">of {totalPages}</span>
+            </div>
             
             <Button
               variant="outline"
               size="sm"
               onClick={handleNextPage}
               disabled={currentPage === totalPages || columnFilteredRules.length === 0}
-              className="h-8 w-8 p-0 border-gray-300"
+              className="h-8 w-8 p-0 border-gray-300 hover:bg-gray-50"
+              title="Next page (Ctrl+→)"
             >
               <CaretRight size={14} />
             </Button>
@@ -1244,18 +1391,19 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               size="sm"
               onClick={handleLastPage}
               disabled={currentPage === totalPages || columnFilteredRules.length === 0}
-              className="h-8 w-8 p-0 border-gray-300"
+              className="h-8 w-8 p-0 border-gray-300 hover:bg-gray-50"
+              title="Last page (Ctrl+End)"
             >
               <CaretDoubleRight size={14} />
             </Button>
           </div>
 
-          <div className="text-sm text-gray-700">
-            {columnFilteredRules.length > 0 ? (
-              `${startIndex + 1} to ${endIndex} of ${columnFilteredRules.length.toLocaleString()}`
-            ) : (
-              '0 to 0 of 0'
-            )}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">
+              {columnFilteredRules.length !== safeRules.length && (
+                `Filtered from ${safeRules.length.toLocaleString()} total`
+              )}
+            </span>
           </div>
         </div>
 
