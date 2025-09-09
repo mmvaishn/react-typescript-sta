@@ -140,12 +140,27 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   const columnFilteredRules = useMemo(() => {
     return safeRules.filter(rule => {
       // Text filters - safely handle undefined/null values
-      if (columnFilters.ruleId && !(rule.ruleId || '').toLowerCase().includes(columnFilters.ruleId.toLowerCase())) return false;
-      if (columnFilters.effectiveDate && !(rule.effectiveDate || '').toLowerCase().includes(columnFilters.effectiveDate.toLowerCase())) return false;
-      if (columnFilters.description && !(rule.description || '').toLowerCase().includes(columnFilters.description.toLowerCase())) return false;
+      if (columnFilters.ruleId && columnFilters.ruleId.trim()) {
+        const ruleIdValue = rule.ruleId || '';
+        if (!ruleIdValue.toLowerCase().includes(columnFilters.ruleId.toLowerCase())) return false;
+      }
+      if (columnFilters.effectiveDate && columnFilters.effectiveDate.trim()) {
+        const effectiveDateValue = rule.effectiveDate || '';
+        if (!effectiveDateValue.toLowerCase().includes(columnFilters.effectiveDate.toLowerCase())) return false;
+      }
+      if (columnFilters.description && columnFilters.description.trim()) {
+        const descriptionValue = rule.description || '';
+        if (!descriptionValue.toLowerCase().includes(columnFilters.description.toLowerCase())) return false;
+      }
 
-      if (columnFilters.english && !(rule.english || '').toLowerCase().includes(columnFilters.english.toLowerCase())) return false;
-      if (columnFilters.spanish && !(rule.spanish || '').toLowerCase().includes(columnFilters.spanish.toLowerCase())) return false;
+      if (columnFilters.english && columnFilters.english.trim()) {
+        const englishValue = rule.english || '';
+        if (!englishValue.toLowerCase().includes(columnFilters.english.toLowerCase())) return false;
+      }
+      if (columnFilters.spanish && columnFilters.spanish.trim()) {
+        const spanishValue = rule.spanish || '';
+        if (!spanishValue.toLowerCase().includes(columnFilters.spanish.toLowerCase())) return false;
+      }
 
       // Multi-select filters
       if (columnFilters.version.length > 0 && !columnFilters.version.includes(rule.version || '')) return false;
