@@ -1359,21 +1359,6 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               className="h-8 w-8 p-0 border-gray-300 hover:bg-gray-50"
               title="Previous page (Ctrl+←)"
             >
-              <CaretLeft size={14} />
-            </Button>
-            
-            <div className="flex items-center gap-2 px-2">
-              <span className="text-sm text-gray-700">Page</span>
-              <Input
-                type="number"
-                min="1"
-                max={totalPages}
-                value={currentPage}
-                onChange={(e) => handlePageJump(e.target.value)}
-                className="w-16 h-8 text-sm text-center border-gray-300"
-                disabled={columnFilteredRules.length === 0}
-              />
-              <span className="text-sm text-gray-700">of {totalPages}</span>
             </div>
             
             <Button
@@ -1383,9 +1368,24 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               disabled={currentPage === totalPages || columnFilteredRules.length === 0}
               className="h-8 w-8 p-0 border-gray-300 hover:bg-gray-50"
               title="Next page (Ctrl+→)"
+                value={currentPage}
+                onChange={(e) => handlePageJump(e.target.value)}
+                className="w-16 h-8 text-sm text-center border-gray-300"
+                disabled={columnFilteredRules.length === 0}
+              />
+              <span className="text-sm text-gray-700">of {totalPages}</span>
+            </div>
+              disabled={currentPage === totalPages || columnFilteredRules.length === 0}
+            <Button
+              title="Last page (Ctrl+End)"
+              size="sm"
+              onClick={handleNextPage}
+              disabled={currentPage === totalPages || columnFilteredRules.length === 0}
+              className="h-8 w-8 p-0 border-gray-300 hover:bg-gray-50"
+              title="Next page (Ctrl+→)"
             >
               <CaretRight size={14} />
-            </Button>
+              {columnFilteredRules.length !== safeRules.length && (
             <Button
               variant="outline"
               size="sm"
