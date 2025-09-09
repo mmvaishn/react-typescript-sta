@@ -55,9 +55,8 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   const [pageSize, setPageSize] = useState(50);
   
   // Column resizing state with persistence
-  const [columnWidths, setColumnWidths] = useKV<Record<string, number>>('rule-grid-column-widths', {
     select: 48,
-    ruleId: 96,
+    select: 48,
     effectiveDate: 160,
     version: 96,
     benefitType: 160,
@@ -104,14 +103,12 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     const newWidth = Math.max(60, startWidth + diff); // Minimum width of 60px
     
     setColumnWidths(currentWidths => ({
-      ...currentWidths,
       [resizingColumn]: newWidth
     }));
-  }, [isResizing, resizingColumn, startX, startWidth, setColumnWidths]);
+      [resizingColumn]: newWidth
 
-  // Double-click to auto-resize column
   const handleDoubleClick = useCallback((columnKey: string) => {
-    // Calculate approximate content width based on column data
+based on column data
     let maxWidth = 100; // minimum width
     
     // Sample a few rows to estimate content width
@@ -166,6 +163,9 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     toast.success('Column widths reset to defaults');
   }, [setColumnWidths]);
 
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false);
+    setResizingColumn(null);
   const handleMouseUp = useCallback(() => {
     setIsResizing(false);
     setResizingColumn(null);
@@ -224,9 +224,6 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     effectiveDate: [...new Set(safeRules.map(r => r.effectiveDate).filter(Boolean))],
     version: [...new Set(safeRules.map(r => r.version).filter(Boolean))],
     benefitType: [...new Set(safeRules.map(r => r.benefitType).filter(Boolean))],
-    businessArea: [...new Set(safeRules.map(r => r.businessArea).filter(Boolean))],
-    subBusinessArea: [...new Set(safeRules.map(r => r.subBusinessArea).filter(Boolean))],
-    templateName: [...new Set(safeRules.map(r => r.templateName).filter(Boolean))],
     serviceId: [...new Set(safeRules.map(r => r.serviceId).filter(Boolean))],
     chapterName: [...new Set(safeRules.map(r => r.chapterName).filter(Boolean))],
     sectionName: [...new Set(safeRules.map(r => r.sectionName).filter(Boolean))],
@@ -824,20 +821,20 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
         className={`absolute right-0 top-0 bottom-0 w-2 cursor-col-resize transition-all duration-200 z-20 resize-handle ${
           resizingColumn === columnKey 
             ? 'active' 
+        className={`absolute right-0 top-0 bottom-0 w-2 cursor-col-resize transition-all duration-200 z-20 resize-handle ${
+        }`}
+            ? 'active' 
             : 'opacity-0 group-hover:opacity-60'
         }`}
-        onMouseDown={(e) => handleMouseDown(e, columnKey)}
+          handleDoubleClick(columnKey);
         onDoubleClick={(e) => {
           e.preventDefault();
           handleDoubleClick(columnKey);
         }}
         title={`Drag to resize or double-click to auto-fit ${children} column`}
-        style={{ 
-          right: -1, // Offset to align with border
-          backgroundColor: resizingColumn === columnKey ? undefined : 'rgba(156, 163, 175, 0.5)'
         }}
       />
-    </div>
+          backgroundColor: resizingColumn === columnKey ? undefined : 'rgba(156, 163, 175, 0.5)'
   );
 
   const renderCell = (rule: RuleData, field: keyof RuleData, content: string, columnKey: string) => {
@@ -886,20 +883,20 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               autoFocus
             />
           )}
+              autoFocus
+            <Button size="sm" variant="outline" onClick={handleSaveEdit} className="h-6 w-6 p-0 border-green-300 hover:bg-green-50">
+          )}Name="text-green-600" />
           <div className="flex gap-1 flex-shrink-0">
             <Button size="sm" variant="outline" onClick={handleSaveEdit} className="h-6 w-6 p-0 border-green-300 hover:bg-green-50">
-              <Save size={10} className="text-green-600" />
+              <X size={10} className="text-gray-500" />
             </Button>
             <Button size="sm" variant="outline" onClick={handleCancelEdit} className="h-6 w-6 p-0 border-gray-300 hover:bg-gray-50">
               <X size={10} className="text-gray-500" />
             </Button>
           </div>
-        </div>
-      );
-    }
 
     return (
-      <div 
+    }
         className={`px-3 py-2 text-sm border-r border-gray-200 last:border-r-0 ${
           isEditable && !isDateField ? 'hover:bg-blue-50 cursor-pointer group' : 'bg-gray-50 cursor-not-allowed'
         } ${selectedRows.has(rule.id) ? 'bg-blue-50' : ''} ${
@@ -975,7 +972,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                     <span className="ml-2 text-xs text-gray-400">• Drag column edges to resize</span>
                   </>
                 ) : (
-                  'No rules found'
+                    <span className="ml-2 text-xs text-gray-400">• Drag column edges to resize</span>
                 )}
               </div>
             </div>
@@ -985,15 +982,15 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                 variant="ghost"
                 className="flex items-center gap-2 text-gray-600 hover:bg-gray-100"
                 onClick={resetColumnWidths}
+                variant="ghost"
+                className="flex items-center gap-2 text-gray-600 hover:bg-gray-100"
+                onClick={resetColumnWidths}
                 title="Reset all columns to default width"
               >
                 Reset Column Widths
               </Button>
               <Button 
                 size="sm" 
-                variant="outline"
-                className="flex items-center gap-2 border-blue-600 text-blue-600 hover:bg-blue-50"
-                onClick={handleBulkEdit}
                 disabled={selectedRows.size !== 1}
               >
                 <Edit size={14} />
@@ -1038,7 +1035,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
         <div className={`flex-1 overflow-auto ${isResizing ? 'table-resizing' : ''}`} ref={tableRef}>
           <div style={{ minWidth: Object.values(columnWidths).reduce((sum, width) => sum + width, 0) }}>
             {/* Table Header */}
-            <div className="flex bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-500 sticky top-0 z-10">
+        <div className={`flex-1 overflow-auto ${isResizing ? 'table-resizing' : ''}`} ref={tableRef}>
               <div 
                 className="px-3 py-2 border-r border-gray-200"
                 style={{ width: columnWidths.select }}
@@ -1047,7 +1044,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   checked={paginatedRules.length > 0 && selectedRows.size === paginatedRules.length}
                   onCheckedChange={handleSelectAll}
                   title={`Select all ${paginatedRules.length} rules on current page`}
-                />
+                  checked={paginatedRules.length > 0 && selectedRows.size === paginatedRules.length}
               </div>
               
               <ResizableHeader columnKey="ruleId" filterComponent={
@@ -1057,15 +1054,15 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   values={uniqueValues.ruleId}
                   selectedValues={[]}
                   onFilter={() => {}}
+                  values={uniqueValues.ruleId}
+                  selectedValues={[]}
+                  onFilter={() => {}}
                   filterType="text"
                   textValue={columnFilters.ruleId}
                   onTextFilter={(value) => handleColumnFilter('ruleId', value)}
                 />
               }>
-                Rule ID
-              </ResizableHeader>
-              
-              <ResizableHeader columnKey="effectiveDate" filterComponent={
+                Rule IDveDate" filterComponent={
                 <ColumnFilter
                   columnKey="effectiveDate"
                   columnTitle="Effective Date"
@@ -1110,7 +1107,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   columnTitle="Business Area"
                   values={uniqueValues.businessArea}
                   selectedValues={columnFilters.businessArea}
-                  onFilter={(values) => handleColumnFilter('businessArea', values)}
+                  columnTitle="Business Area"
                 />
               }>
                 Business Area
