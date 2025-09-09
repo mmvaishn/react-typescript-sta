@@ -1101,7 +1101,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   values={uniqueValues.businessArea}
                   selectedValues={columnFilters.businessArea}
                   onFilter={(values) => handleColumnFilter('businessArea', values)}
-                  onFilter={(values) => handleColumnFilter('businessArea', values)}
+                />
               }>
                 Business Area
               </ResizableHeader>
