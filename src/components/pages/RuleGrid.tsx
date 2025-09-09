@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
+import { useKV } from '@github/spark/hooks';
 import { RuleData, EditingRule } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -53,6 +54,142 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   
+  // Column resizing state with persistence
+  const [columnWidths, setColumnWidths] = useKV<Record<string, number>>('rule-grid-column-widths', {
+    select: 48,
+    ruleId: 96,
+    effectiveDate: 160,
+    version: 96,
+    benefitType: 160,
+    businessArea: 160,
+    subBusinessArea: 192,
+    description: 256,
+    templateName: 192,
+    serviceId: 128,
+    cmsRegulated: 128,
+    chapterName: 192,
+    sectionName: 192,
+    subsectionName: 192,
+    serviceGroup: 128,
+    sourceMapping: 160,
+    tiers: 128,
+    key: 128,
+    isTabular: 112,
+    english: 256,
+    englishStatus: 128,
+    spanish: 256,
+    spanishStatus: 128,
+    published: 128,
+  });
+  
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizingColumn, setResizingColumn] = useState<string | null>(null);
+  const [startX, setStartX] = useState(0);
+  const [startWidth, setStartWidth] = useState(0);
+  const tableRef = useRef<HTMLDivElement>(null);
+  
+  // Column resizing functions
+  const handleMouseDown = useCallback((e: React.MouseEvent, columnKey: string) => {
+    e.preventDefault();
+    setIsResizing(true);
+    setResizingColumn(columnKey);
+    setStartX(e.clientX);
+    setStartWidth(columnWidths[columnKey] || 100);
+  }, [columnWidths]);
+
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    if (!isResizing || !resizingColumn) return;
+    
+    const diff = e.clientX - startX;
+    const newWidth = Math.max(60, startWidth + diff); // Minimum width of 60px
+    
+    setColumnWidths(currentWidths => ({
+      ...currentWidths,
+      [resizingColumn]: newWidth
+    }));
+  }, [isResizing, resizingColumn, startX, startWidth, setColumnWidths]);
+
+  // Double-click to auto-resize column
+  const handleDoubleClick = useCallback((columnKey: string) => {
+    // Calculate approximate content width based on column data
+    let maxWidth = 100; // minimum width
+    
+    // Sample a few rows to estimate content width
+    const sampleSize = Math.min(20, paginatedRules.length);
+    for (let i = 0; i < sampleSize; i++) {
+      const rule = paginatedRules[i];
+      if (rule) {
+        const value = (rule as any)[columnKey as keyof RuleData] || '';
+        const contentLength = String(value).length;
+        maxWidth = Math.max(maxWidth, Math.min(400, contentLength * 8 + 40)); // Max 400px
+      }
+    }
+    
+    setColumnWidths(currentWidths => ({
+      ...currentWidths,
+      [columnKey]: maxWidth
+    }));
+    
+    toast.success(`Auto-resized ${columnKey} column to ${maxWidth}px`);
+  }, [paginatedRules, setColumnWidths]);
+
+  // Reset column widths to defaults
+  const resetColumnWidths = useCallback(() => {
+    const defaultWidths = {
+      select: 48,
+      ruleId: 96,
+      effectiveDate: 160,
+      version: 96,
+      benefitType: 160,
+      businessArea: 160,
+      subBusinessArea: 192,
+      description: 256,
+      templateName: 192,
+      serviceId: 128,
+      cmsRegulated: 128,
+      chapterName: 192,
+      sectionName: 192,
+      subsectionName: 192,
+      serviceGroup: 128,
+      sourceMapping: 160,
+      tiers: 128,
+      key: 128,
+      isTabular: 112,
+      english: 256,
+      englishStatus: 128,
+      spanish: 256,
+      spanishStatus: 128,
+      published: 128,
+    };
+    
+    setColumnWidths(defaultWidths);
+    toast.success('Column widths reset to defaults');
+  }, [setColumnWidths]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsResizing(false);
+    setResizingColumn(null);
+    setStartX(0);
+    setStartWidth(0);
+  }, []);
+
+  // Add global mouse event listeners for resizing
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = 'none';
+      document.body.style.cursor = 'col-resize';
+      
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.body.style.userSelect = '';
+        document.body.style.cursor = '';
+      };
+    }
+  }, [isResizing, handleMouseMove, handleMouseUp]);
+
   // Column-specific filters state
   const [columnFilters, setColumnFilters] = useState({
     ruleId: '',
@@ -660,7 +797,51 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     return tempDiv.textContent || tempDiv.innerText || '';
   };
 
-  const renderCell = (rule: RuleData, field: keyof RuleData, content: string, className: string = '') => {
+  // Resizable header component
+  const ResizableHeader = ({ 
+    columnKey, 
+    children, 
+    className = '',
+    showFilter = true,
+    filterComponent
+  }: { 
+    columnKey: string;
+    children: React.ReactNode;
+    className?: string;
+    showFilter?: boolean;
+    filterComponent?: React.ReactNode;
+  }) => (
+    <div 
+      className={`px-3 py-2 border-r border-gray-200 flex items-center justify-between relative group ${className}`}
+      style={{ width: columnWidths[columnKey] }}
+    >
+      <div className="flex items-center gap-2 flex-1 min-w-0">
+        <span className="truncate">{children}</span>
+        <ChevronDown size={14} className="text-gray-400 flex-shrink-0" />
+      </div>
+      {showFilter && filterComponent}
+      <div
+        className={`absolute right-0 top-0 bottom-0 w-2 cursor-col-resize transition-all duration-200 z-20 resize-handle ${
+          resizingColumn === columnKey 
+            ? 'active' 
+            : 'opacity-0 group-hover:opacity-60'
+        }`}
+        onMouseDown={(e) => handleMouseDown(e, columnKey)}
+        onDoubleClick={(e) => {
+          e.preventDefault();
+          handleDoubleClick(columnKey);
+        }}
+        title={`Drag to resize or double-click to auto-fit ${children} column`}
+        style={{ 
+          right: -1, // Offset to align with border
+          backgroundColor: resizingColumn === columnKey ? undefined : 'rgba(156, 163, 175, 0.5)'
+        }}
+      />
+    </div>
+  );
+
+  const renderCell = (rule: RuleData, field: keyof RuleData, content: string, columnKey: string) => {
+  const renderCell = (rule: RuleData, field: keyof RuleData, content: string, columnKey: string) => {
     const isEditing = editingRule?.id === rule.id && editingRule?.field === field;
     const isEditable = !['createdAt', 'lastModified', 'id', 'ruleId', 'cmsRegulated', 'isTabular', 'published'].includes(field);
     const isRichTextField = field === 'english' || field === 'spanish';
@@ -670,7 +851,10 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     if (isDateField) {
       const currentDate = parseDateFromString(rule.effectiveDate);
       return (
-        <div className={`px-2 py-1 border-r border-gray-200 ${className} bg-white`}>
+        <div 
+          className="px-2 py-1 border-r border-gray-200 bg-white"
+          style={{ width: columnWidths[columnKey] }}
+        >
           <DatePicker
             date={currentDate}
             onDateChange={(newDate) => handleDateChange(rule, newDate)}
@@ -683,7 +867,10 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     
     if (isEditing) {
       return (
-        <div className={`px-3 py-1 border-r border-gray-200 flex items-center gap-2 ${className}`}>
+        <div 
+          className="px-3 py-1 border-r border-gray-200 flex items-center gap-2"
+          style={{ width: columnWidths[columnKey] }}
+        >
           {field === 'english' || field === 'spanish' ? (
             <Textarea
               value={editValue}
@@ -713,18 +900,19 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
 
     return (
       <div 
-        className={`px-3 py-2 text-sm border-r border-gray-200 last:border-r-0 ${className} ${
+        className={`px-3 py-2 text-sm border-r border-gray-200 last:border-r-0 ${
           isEditable && !isDateField ? 'hover:bg-blue-50 cursor-pointer group' : 'bg-gray-50 cursor-not-allowed'
         } ${selectedRows.has(rule.id) ? 'bg-blue-50' : ''} ${
           field === 'ruleId' ? 'font-mono font-semibold text-purple-700' : ''
         }`}
+        style={{ width: columnWidths[columnKey] }}
         onClick={() => isEditable && !isDateField && handleCellClick(rule, field)}
         title={field === 'ruleId' ? 'Rule ID (Auto-generated, non-editable)' : undefined}
       >
         <div className="flex items-center justify-between">
           <span className="truncate flex-1 text-gray-900">
             {isRichTextField && content ? (
-              <div className="max-w-[200px]">
+              <div className="max-w-full">
                 {stripHtmlTags(content).substring(0, 100) + (stripHtmlTags(content).length > 100 ? '...' : '')}
               </div>
             ) : isDateField ? (
@@ -784,6 +972,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                     {selectedRows.size > 0 && (
                       <span className="ml-2 text-blue-600 font-medium">• {selectedRows.size} selected</span>
                     )}
+                    <span className="ml-2 text-xs text-gray-400">• Drag column edges to resize</span>
                   </>
                 ) : (
                   'No rules found'
@@ -791,6 +980,15 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <Button 
+                size="sm" 
+                variant="ghost"
+                className="flex items-center gap-2 text-gray-600 hover:bg-gray-100"
+                onClick={resetColumnWidths}
+                title="Reset all columns to default width"
+              >
+                Reset Column Widths
+              </Button>
               <Button 
                 size="sm" 
                 variant="outline"
@@ -837,22 +1035,22 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
       </div>
 
         {/* Full Height Table Section with Maximum Scrolling Area */}
-        <div className="flex-1 overflow-auto">
-          <div className="min-w-[4350px] h-full">
+        <div className={`flex-1 overflow-auto ${isResizing ? 'table-resizing' : ''}`} ref={tableRef}>
+          <div style={{ minWidth: Object.values(columnWidths).reduce((sum, width) => sum + width, 0) }}>
             {/* Table Header */}
             <div className="flex bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-500 sticky top-0 z-10">
-              <div className="w-12 px-3 py-2 border-r border-gray-200">
+              <div 
+                className="px-3 py-2 border-r border-gray-200"
+                style={{ width: columnWidths.select }}
+              >
                 <Checkbox 
                   checked={paginatedRules.length > 0 && selectedRows.size === paginatedRules.length}
                   onCheckedChange={handleSelectAll}
                   title={`Select all ${paginatedRules.length} rules on current page`}
                 />
               </div>
-              <div className="w-24 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Rule ID</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              
+              <ResizableHeader columnKey="ruleId" filterComponent={
                 <ColumnFilter
                   columnKey="ruleId"
                   columnTitle="Rule ID"
@@ -863,12 +1061,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   textValue={columnFilters.ruleId}
                   onTextFilter={(value) => handleColumnFilter('ruleId', value)}
                 />
-              </div>
-              <div className="w-40 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Effective Date</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Rule ID
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="effectiveDate" filterComponent={
                 <ColumnFilter
                   columnKey="effectiveDate"
                   columnTitle="Effective Date"
@@ -879,12 +1076,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   textValue={columnFilters.effectiveDate}
                   onTextFilter={(value) => handleColumnFilter('effectiveDate', value)}
                 />
-              </div>
-              <div className="w-24 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Version</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Effective Date
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="version" filterComponent={
                 <ColumnFilter
                   columnKey="version"
                   columnTitle="Version"
@@ -892,12 +1088,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.version}
                   onFilter={(values) => handleColumnFilter('version', values)}
                 />
-              </div>
-              <div className="w-40 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Benefit Type</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Version
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="benefitType" filterComponent={
                 <ColumnFilter
                   columnKey="benefitType"
                   columnTitle="Benefit Type"
@@ -905,12 +1100,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.benefitType}
                   onFilter={(values) => handleColumnFilter('benefitType', values)}
                 />
-              </div>
-              <div className="w-40 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Business Area</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Benefit Type
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="businessArea" filterComponent={
                 <ColumnFilter
                   columnKey="businessArea"
                   columnTitle="Business Area"
@@ -918,12 +1112,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.businessArea}
                   onFilter={(values) => handleColumnFilter('businessArea', values)}
                 />
-              </div>
-              <div className="w-48 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Sub-Business Area</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Business Area
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="subBusinessArea" filterComponent={
                 <ColumnFilter
                   columnKey="subBusinessArea"
                   columnTitle="Sub-Business Area"
@@ -931,12 +1124,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.subBusinessArea}
                   onFilter={(values) => handleColumnFilter('subBusinessArea', values)}
                 />
-              </div>
-              <div className="w-64 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Description</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Sub-Business Area
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="description" filterComponent={
                 <ColumnFilter
                   columnKey="description"
                   columnTitle="Description"
@@ -947,12 +1139,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   textValue={columnFilters.description}
                   onTextFilter={(value) => handleColumnFilter('description', value)}
                 />
-              </div>
-              <div className="w-48 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Template Name</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Description
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="templateName" filterComponent={
                 <ColumnFilter
                   columnKey="templateName"
                   columnTitle="Template Name"
@@ -960,12 +1151,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.templateName}
                   onFilter={(values) => handleColumnFilter('templateName', values)}
                 />
-              </div>
-              <div className="w-32 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Service ID</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Template Name
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="serviceId" filterComponent={
                 <ColumnFilter
                   columnKey="serviceId"
                   columnTitle="Service ID"
@@ -973,11 +1163,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.serviceId}
                   onFilter={(values) => handleColumnFilter('serviceId', values)}
                 />
-              </div>
-              <div className="w-32 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>CMS Regulated</span>
-                </div>
+              }>
+                Service ID
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="cmsRegulated" showFilter={true} filterComponent={
                 <ColumnFilter
                   columnKey="cmsRegulated"
                   columnTitle="CMS Regulated"
@@ -988,12 +1178,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   booleanValue={columnFilters.cmsRegulated}
                   onBooleanFilter={(value) => handleColumnFilter('cmsRegulated', value)}
                 />
-              </div>
-              <div className="w-48 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Chapter Name</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                CMS Regulated
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="chapterName" filterComponent={
                 <ColumnFilter
                   columnKey="chapterName"
                   columnTitle="Chapter Name"
@@ -1001,12 +1190,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.chapterName}
                   onFilter={(values) => handleColumnFilter('chapterName', values)}
                 />
-              </div>
-              <div className="w-48 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Section Name</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Chapter Name
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="sectionName" filterComponent={
                 <ColumnFilter
                   columnKey="sectionName"
                   columnTitle="Section Name"
@@ -1014,12 +1202,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.sectionName}
                   onFilter={(values) => handleColumnFilter('sectionName', values)}
                 />
-              </div>
-              <div className="w-48 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Subsection Name</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Section Name
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="subsectionName" filterComponent={
                 <ColumnFilter
                   columnKey="subsectionName"
                   columnTitle="Subsection Name"
@@ -1027,12 +1214,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.subsectionName}
                   onFilter={(values) => handleColumnFilter('subsectionName', values)}
                 />
-              </div>
-              <div className="w-32 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Service Group</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Subsection Name
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="serviceGroup" filterComponent={
                 <ColumnFilter
                   columnKey="serviceGroup"
                   columnTitle="Service Group"
@@ -1040,12 +1226,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.serviceGroup}
                   onFilter={(values) => handleColumnFilter('serviceGroup', values)}
                 />
-              </div>
-              <div className="w-40 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Source Mapping</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Service Group
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="sourceMapping" filterComponent={
                 <ColumnFilter
                   columnKey="sourceMapping"
                   columnTitle="Source Mapping"
@@ -1053,12 +1238,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.sourceMapping}
                   onFilter={(values) => handleColumnFilter('sourceMapping', values)}
                 />
-              </div>
-              <div className="w-32 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Tiers</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Source Mapping
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="tiers" filterComponent={
                 <ColumnFilter
                   columnKey="tiers"
                   columnTitle="Tiers"
@@ -1066,12 +1250,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.tiers}
                   onFilter={(values) => handleColumnFilter('tiers', values)}
                 />
-              </div>
-              <div className="w-32 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Key</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Tiers
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="key" filterComponent={
                 <ColumnFilter
                   columnKey="key"
                   columnTitle="Key"
@@ -1079,12 +1262,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.key}
                   onFilter={(values) => handleColumnFilter('key', values)}
                 />
-              </div>
+              }>
+                Key
+              </ResizableHeader>
 
-              <div className="w-28 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Is Tabular</span>
-                </div>
+              <ResizableHeader columnKey="isTabular" showFilter={true} filterComponent={
                 <ColumnFilter
                   columnKey="isTabular"
                   columnTitle="Is Tabular"
@@ -1095,12 +1277,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   booleanValue={columnFilters.isTabular}
                   onBooleanFilter={(value) => handleColumnFilter('isTabular', value)}
                 />
-              </div>
-              <div className="w-64 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>English</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Is Tabular
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="english" filterComponent={
                 <ColumnFilter
                   columnKey="english"
                   columnTitle="English"
@@ -1111,12 +1292,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   textValue={columnFilters.english}
                   onTextFilter={(value) => handleColumnFilter('english', value)}
                 />
-              </div>
-              <div className="w-32 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Status</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                English
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="englishStatus" filterComponent={
                 <ColumnFilter
                   columnKey="englishStatus"
                   columnTitle="English Status"
@@ -1124,12 +1304,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.englishStatus}
                   onFilter={(values) => handleColumnFilter('englishStatus', values)}
                 />
-              </div>
-              <div className="w-64 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Spanish</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Status
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="spanish" filterComponent={
                 <ColumnFilter
                   columnKey="spanish"
                   columnTitle="Spanish"
@@ -1140,12 +1319,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   textValue={columnFilters.spanish}
                   onTextFilter={(value) => handleColumnFilter('spanish', value)}
                 />
-              </div>
-              <div className="w-32 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Status</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
+              }>
+                Spanish
+              </ResizableHeader>
+              
+              <ResizableHeader columnKey="spanishStatus" filterComponent={
                 <ColumnFilter
                   columnKey="spanishStatus"
                   columnTitle="Spanish Status"
@@ -1153,8 +1331,14 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   selectedValues={columnFilters.spanishStatus}
                   onFilter={(values) => handleColumnFilter('spanishStatus', values)}
                 />
-              </div>
-              <div className="w-32 px-3 py-2 flex items-center justify-between">
+              }>
+                Status
+              </ResizableHeader>
+              
+              <div 
+                className="px-3 py-2 flex items-center justify-between"
+                style={{ width: columnWidths.published }}
+              >
                 <div className="flex items-center gap-2">
                   <span>Published</span>
                 </div>
@@ -1181,24 +1365,30 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                     selectedRows.has(rule.id) ? 'bg-blue-50' : ''
                   }`}
                 >
-                  <div className="w-12 px-3 py-2 border-r border-gray-200 flex items-center">
+                  <div 
+                    className="px-3 py-2 border-r border-gray-200 flex items-center"
+                    style={{ width: columnWidths.select }}
+                  >
                     <Checkbox 
                       checked={selectedRows.has(rule.id)}
                       onCheckedChange={(checked) => handleRowSelect(rule.id, checked as boolean)}
                     />
                   </div>
                   
-                  {renderCell(rule, 'ruleId', rule.ruleId || 'N/A', 'w-24 font-medium')}
-                  {renderCell(rule, 'effectiveDate', rule.effectiveDate || 'N/A', 'w-40')}
-                  {renderCell(rule, 'version', rule.version || 'N/A', 'w-24')}
-                  {renderCell(rule, 'benefitType', rule.benefitType || 'N/A', 'w-40')}
-                  {renderCell(rule, 'businessArea', rule.businessArea || 'N/A', 'w-40')}
-                  {renderCell(rule, 'subBusinessArea', rule.subBusinessArea || 'N/A', 'w-48')}
-                  {renderCell(rule, 'description', rule.description || 'N/A', 'w-64')}
-                  {renderCell(rule, 'templateName', rule.templateName || 'N/A', 'w-48 font-medium')}
-                  {renderCell(rule, 'serviceId', rule.serviceId || 'N/A', 'w-32')}
+                  {renderCell(rule, 'ruleId', rule.ruleId || 'N/A', 'ruleId')}
+                  {renderCell(rule, 'effectiveDate', rule.effectiveDate || 'N/A', 'effectiveDate')}
+                  {renderCell(rule, 'version', rule.version || 'N/A', 'version')}
+                  {renderCell(rule, 'benefitType', rule.benefitType || 'N/A', 'benefitType')}
+                  {renderCell(rule, 'businessArea', rule.businessArea || 'N/A', 'businessArea')}
+                  {renderCell(rule, 'subBusinessArea', rule.subBusinessArea || 'N/A', 'subBusinessArea')}
+                  {renderCell(rule, 'description', rule.description || 'N/A', 'description')}
+                  {renderCell(rule, 'templateName', rule.templateName || 'N/A', 'templateName')}
+                  {renderCell(rule, 'serviceId', rule.serviceId || 'N/A', 'serviceId')}
                   
-                  <div className="w-32 px-3 py-2 border-r border-gray-200 flex items-center justify-center">
+                  <div 
+                    className="px-3 py-2 border-r border-gray-200 flex items-center justify-center"
+                    style={{ width: columnWidths.cmsRegulated }}
+                  >
                     <Checkbox 
                       checked={rule.cmsRegulated || false}
                       onCheckedChange={(checked) => {
@@ -1225,16 +1415,19 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                     />
                   </div>
                   
-                  {renderCell(rule, 'chapterName', rule.chapterName || 'N/A', 'w-48')}
-                  {renderCell(rule, 'sectionName', rule.sectionName || 'N/A', 'w-48')}
-                  {renderCell(rule, 'subsectionName', rule.subsectionName || 'N/A', 'w-48')}
-                  {renderCell(rule, 'serviceGroup', rule.serviceGroup || 'N/A', 'w-32')}
-                  {renderCell(rule, 'sourceMapping', rule.sourceMapping || 'N/A', 'w-40')}
-                  {renderCell(rule, 'tiers', rule.tiers || 'N/A', 'w-32')}
-                  {renderCell(rule, 'key', rule.key || 'N/A', 'w-32')}
+                  {renderCell(rule, 'chapterName', rule.chapterName || 'N/A', 'chapterName')}
+                  {renderCell(rule, 'sectionName', rule.sectionName || 'N/A', 'sectionName')}
+                  {renderCell(rule, 'subsectionName', rule.subsectionName || 'N/A', 'subsectionName')}
+                  {renderCell(rule, 'serviceGroup', rule.serviceGroup || 'N/A', 'serviceGroup')}
+                  {renderCell(rule, 'sourceMapping', rule.sourceMapping || 'N/A', 'sourceMapping')}
+                  {renderCell(rule, 'tiers', rule.tiers || 'N/A', 'tiers')}
+                  {renderCell(rule, 'key', rule.key || 'N/A', 'key')}
 
                   
-                  <div className="w-28 px-3 py-2 border-r border-gray-200 flex items-center justify-center">
+                  <div 
+                    className="px-3 py-2 border-r border-gray-200 flex items-center justify-center"
+                    style={{ width: columnWidths.isTabular }}
+                  >
                     <Checkbox 
                       checked={rule.isTabular || false}
                       onCheckedChange={(checked) => {
@@ -1261,19 +1454,28 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                     />
                   </div>
                   
-                  {renderCell(rule, 'english', rule.english || 'N/A', 'w-64')}
+                  {renderCell(rule, 'english', rule.english || 'N/A', 'english')}
                   
-                  <div className="w-32 px-3 py-2 border-r border-gray-200">
+                  <div 
+                    className="px-3 py-2 border-r border-gray-200"
+                    style={{ width: columnWidths.englishStatus }}
+                  >
                     {getStatusBadge(rule.englishStatus)}
                   </div>
                   
-                  {renderCell(rule, 'spanish', rule.spanish || 'N/A', 'w-64')}
+                  {renderCell(rule, 'spanish', rule.spanish || 'N/A', 'spanish')}
                   
-                  <div className="w-32 px-3 py-2 border-r border-gray-200">
+                  <div 
+                    className="px-3 py-2 border-r border-gray-200"
+                    style={{ width: columnWidths.spanishStatus }}
+                  >
                     {getStatusBadge(rule.spanishStatus)}
                   </div>
                   
-                  <div className="w-32 px-3 py-2 flex items-center justify-center">
+                  <div 
+                    className="px-3 py-2 flex items-center justify-center"
+                    style={{ width: columnWidths.published }}
+                  >
                     <Checkbox 
                       checked={rule.published || false}
                       onCheckedChange={(checked) => {

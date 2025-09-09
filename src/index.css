@@ -66,3 +66,21 @@
 body {
   font-family: 'Inter', system-ui, sans-serif;
 }
+
+/* Custom styles for column resizing */
+.table-resizing {
+  user-select: none;
+}
+
+.table-resizing * {
+  pointer-events: none;
+}
+
+.resize-handle:hover {
+  background-color: rgba(59, 130, 246, 0.5);
+}
+
+.resize-handle.active {
+  background-color: rgb(59, 130, 246);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
+}
