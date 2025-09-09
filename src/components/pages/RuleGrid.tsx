@@ -106,9 +106,10 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
       ...currentWidths,
       [resizingColumn]: newWidth
     }));
+  }, [isResizing, resizingColumn, startX, startWidth]);
 
   const handleDoubleClick = useCallback((columnKey: string) => {
-based on column data
+    // Auto-size column based on column data
     let maxWidth = 100; // minimum width
     
     // Sample a few rows to estimate content width
