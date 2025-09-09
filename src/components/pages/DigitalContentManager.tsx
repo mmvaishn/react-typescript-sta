@@ -100,8 +100,8 @@ export function DigitalContentManager({ onNavigate, onEditRule }: DigitalContent
       for (const item of extractedData) {
         const existingRule = rules.find(rule => {
           if (!rule.templateName || !item.title) return false;
-          const ruleTemplateName = rule.templateName.toLowerCase();
-          const itemTitle = item.title.toLowerCase();
+          const ruleTemplateName = String(rule.templateName).toLowerCase();
+          const itemTitle = String(item.title).toLowerCase();
           return ruleTemplateName.includes(itemTitle) || itemTitle.includes(ruleTemplateName);
         });
 

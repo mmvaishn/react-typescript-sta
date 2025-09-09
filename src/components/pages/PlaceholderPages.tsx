@@ -1517,35 +1517,35 @@ export function Publish() {
   // Filter and sort data
   const filteredAndSortedData = useMemo(() => {
     let filtered = publishData.filter(item => {
-      // Apply column filters
-      if (columnFilters.eventSequence && !item.eventSequence.toLowerCase().includes(columnFilters.eventSequence.toLowerCase())) {
+      // Apply column filters - safely handle undefined/null values
+      if (columnFilters.eventSequence && !String(item.eventSequence || '').toLowerCase().includes(columnFilters.eventSequence.toLowerCase())) {
         return false
       }
-      if (columnFilters.ruleId && !item.ruleId.toLowerCase().includes(columnFilters.ruleId.toLowerCase())) {
+      if (columnFilters.ruleId && !String(item.ruleId || '').toLowerCase().includes(columnFilters.ruleId.toLowerCase())) {
         return false
       }
-      if (columnFilters.rowVersion && !item.rowVersion.toLowerCase().includes(columnFilters.rowVersion.toLowerCase())) {
+      if (columnFilters.rowVersion && !String(item.rowVersion || '').toLowerCase().includes(columnFilters.rowVersion.toLowerCase())) {
         return false
       }
-      if (columnFilters.benefitType && !item.benefitType.toLowerCase().includes(columnFilters.benefitType.toLowerCase())) {
+      if (columnFilters.benefitType && !String(item.benefitType || '').toLowerCase().includes(columnFilters.benefitType.toLowerCase())) {
         return false
       }
-      if (columnFilters.benefitCategory && !item.benefitCategory.toLowerCase().includes(columnFilters.benefitCategory.toLowerCase())) {
+      if (columnFilters.benefitCategory && !String(item.benefitCategory || '').toLowerCase().includes(columnFilters.benefitCategory.toLowerCase())) {
         return false
       }
-      if (columnFilters.businessArea && !item.businessArea.toLowerCase().includes(columnFilters.businessArea.toLowerCase())) {
+      if (columnFilters.businessArea && !String(item.businessArea || '').toLowerCase().includes(columnFilters.businessArea.toLowerCase())) {
         return false
       }
-      if (columnFilters.subBusinessArea && !item.subBusinessArea.toLowerCase().includes(columnFilters.subBusinessArea.toLowerCase())) {
+      if (columnFilters.subBusinessArea && !String(item.subBusinessArea || '').toLowerCase().includes(columnFilters.subBusinessArea.toLowerCase())) {
         return false
       }
-      if (columnFilters.createdOn && !item.createdOn.toLowerCase().includes(columnFilters.createdOn.toLowerCase())) {
+      if (columnFilters.createdOn && !String(item.createdOn || '').toLowerCase().includes(columnFilters.createdOn.toLowerCase())) {
         return false
       }
-      if (columnFilters.jsonData && !item.jsonData.toLowerCase().includes(columnFilters.jsonData.toLowerCase())) {
+      if (columnFilters.jsonData && !String(item.jsonData || '').toLowerCase().includes(columnFilters.jsonData.toLowerCase())) {
         return false
       }
-      if (columnFilters.isPublished && !item.isPublished.toLowerCase().includes(columnFilters.isPublished.toLowerCase())) {
+      if (columnFilters.isPublished && !String(item.isPublished || '').toLowerCase().includes(columnFilters.isPublished.toLowerCase())) {
         return false
       }
       
@@ -2669,53 +2669,53 @@ function CollaborateMain() {
   // Filter and sort data
   const filteredAndSortedData = useMemo(() => {
     let filtered = collaborateData.filter(item => {
-      // Apply column filters
-      if (columnFilters.id && !item.id.toLowerCase().includes(columnFilters.id.toLowerCase())) {
+      // Apply column filters - safely handle undefined/null values
+      if (columnFilters.id && !String(item.id || '').toLowerCase().includes(columnFilters.id.toLowerCase())) {
         return false
       }
-      if (columnFilters.collateralType && !item.collateralType.toLowerCase().includes(columnFilters.collateralType.toLowerCase())) {
+      if (columnFilters.collateralType && !String(item.collateralType || '').toLowerCase().includes(columnFilters.collateralType.toLowerCase())) {
         return false
       }
-      if (columnFilters.fontType && !item.fontType.toLowerCase().includes(columnFilters.fontType.toLowerCase())) {
+      if (columnFilters.fontType && !String(item.fontType || '').toLowerCase().includes(columnFilters.fontType.toLowerCase())) {
         return false
       }
-      if (columnFilters.productName && !item.productName.toLowerCase().includes(columnFilters.productName.toLowerCase())) {
+      if (columnFilters.productName && !String(item.productName || '').toLowerCase().includes(columnFilters.productName.toLowerCase())) {
         return false
       }
-      if (columnFilters.folderName && !item.folderName.toLowerCase().includes(columnFilters.folderName.toLowerCase())) {
+      if (columnFilters.folderName && !String(item.folderName || '').toLowerCase().includes(columnFilters.folderName.toLowerCase())) {
         return false
       }
-      if (columnFilters.effectiveDate && !item.effectiveDate.toLowerCase().includes(columnFilters.effectiveDate.toLowerCase())) {
+      if (columnFilters.effectiveDate && !String(item.effectiveDate || '').toLowerCase().includes(columnFilters.effectiveDate.toLowerCase())) {
         return false
       }
-      if (columnFilters.version && !item.version.toLowerCase().includes(columnFilters.version.toLowerCase())) {
+      if (columnFilters.version && !String(item.version || '').toLowerCase().includes(columnFilters.version.toLowerCase())) {
         return false
       }
-      if (columnFilters.workflowStage && !item.workflowStage.toLowerCase().includes(columnFilters.workflowStage.toLowerCase())) {
+      if (columnFilters.workflowStage && !String(item.workflowStage || '').toLowerCase().includes(columnFilters.workflowStage.toLowerCase())) {
         return false
       }
-      if (columnFilters.estimatedDate && !item.estimatedDate.toLowerCase().includes(columnFilters.estimatedDate.toLowerCase())) {
+      if (columnFilters.estimatedDate && !String(item.estimatedDate || '').toLowerCase().includes(columnFilters.estimatedDate.toLowerCase())) {
         return false
       }
-      if (columnFilters.collaborators && !item.collaborators.toLowerCase().includes(columnFilters.collaborators.toLowerCase())) {
+      if (columnFilters.collaborators && !String(item.collaborators || '').toLowerCase().includes(columnFilters.collaborators.toLowerCase())) {
         return false
       }
-      if (columnFilters.reviewSummary && !item.reviewSummary.toLowerCase().includes(columnFilters.reviewSummary.toLowerCase())) {
+      if (columnFilters.reviewSummary && !String(item.reviewSummary || '').toLowerCase().includes(columnFilters.reviewSummary.toLowerCase())) {
         return false
       }
-      if (columnFilters.reviewersInvolved && !item.reviewersInvolved.toLowerCase().includes(columnFilters.reviewersInvolved.toLowerCase())) {
+      if (columnFilters.reviewersInvolved && !String(item.reviewersInvolved || '').toLowerCase().includes(columnFilters.reviewersInvolved.toLowerCase())) {
         return false
       }
-      if (columnFilters.queuedBy && !item.queuedBy.toLowerCase().includes(columnFilters.queuedBy.toLowerCase())) {
+      if (columnFilters.queuedBy && !String(item.queuedBy || '').toLowerCase().includes(columnFilters.queuedBy.toLowerCase())) {
         return false
       }
-      if (columnFilters.queuedDate && !item.queuedDate.toLowerCase().includes(columnFilters.queuedDate.toLowerCase())) {
+      if (columnFilters.queuedDate && !String(item.queuedDate || '').toLowerCase().includes(columnFilters.queuedDate.toLowerCase())) {
         return false
       }
-      if (columnFilters.totalReviewCount && !item.totalReviewCount.toLowerCase().includes(columnFilters.totalReviewCount.toLowerCase())) {
+      if (columnFilters.totalReviewCount && !String(item.totalReviewCount || '').toLowerCase().includes(columnFilters.totalReviewCount.toLowerCase())) {
         return false
       }
-      if (columnFilters.updateStatus && !item.updateStatus.toLowerCase().includes(columnFilters.updateStatus.toLowerCase())) {
+      if (columnFilters.updateStatus && !String(item.updateStatus || '').toLowerCase().includes(columnFilters.updateStatus.toLowerCase())) {
         return false
       }
       
@@ -3785,26 +3785,26 @@ function LogsTab() {
   // Filter and sort data
   const filteredAndSortedData = useMemo(() => {
     let filtered = logsData.filter(item => {
-      // Apply column filters
-      if (columnFilters.productName && !item.productName.toLowerCase().includes(columnFilters.productName.toLowerCase())) {
+      // Apply column filters - safely handle undefined/null values
+      if (columnFilters.productName && !String(item.productName || '').toLowerCase().includes(columnFilters.productName.toLowerCase())) {
         return false
       }
-      if (columnFilters.collaborateVersion && !item.collaborateVersion.toLowerCase().includes(columnFilters.collaborateVersion.toLowerCase())) {
+      if (columnFilters.collaborateVersion && !String(item.collaborateVersion || '').toLowerCase().includes(columnFilters.collaborateVersion.toLowerCase())) {
         return false
       }
-      if (columnFilters.actionChangeType && !item.actionChangeType.toLowerCase().includes(columnFilters.actionChangeType.toLowerCase())) {
+      if (columnFilters.actionChangeType && !String(item.actionChangeType || '').toLowerCase().includes(columnFilters.actionChangeType.toLowerCase())) {
         return false
       }
-      if (columnFilters.change && !item.change.toLowerCase().includes(columnFilters.change.toLowerCase())) {
+      if (columnFilters.change && !String(item.change || '').toLowerCase().includes(columnFilters.change.toLowerCase())) {
         return false
       }
-      if (columnFilters.commentReason && !item.commentReason.toLowerCase().includes(columnFilters.commentReason.toLowerCase())) {
+      if (columnFilters.commentReason && !String(item.commentReason || '').toLowerCase().includes(columnFilters.commentReason.toLowerCase())) {
         return false
       }
-      if (columnFilters.updatedBy && !item.updatedBy.toLowerCase().includes(columnFilters.updatedBy.toLowerCase())) {
+      if (columnFilters.updatedBy && !String(item.updatedBy || '').toLowerCase().includes(columnFilters.updatedBy.toLowerCase())) {
         return false
       }
-      if (columnFilters.dateTimestamp && !item.dateTimestamp.toLowerCase().includes(columnFilters.dateTimestamp.toLowerCase())) {
+      if (columnFilters.dateTimestamp && !String(item.dateTimestamp || '').toLowerCase().includes(columnFilters.dateTimestamp.toLowerCase())) {
         return false
       }
       
@@ -4306,14 +4306,14 @@ function UserManagementTab() {
   // Filter and sort data
   const filteredAndSortedData = useMemo(() => {
     let filtered = userData.filter(item => {
-      // Apply column filters
-      if (columnFilters.name && !item.name.toLowerCase().includes(columnFilters.name.toLowerCase())) {
+      // Apply column filters - safely handle undefined/null values
+      if (columnFilters.name && !String(item.name || '').toLowerCase().includes(columnFilters.name.toLowerCase())) {
         return false
       }
-      if (columnFilters.email && !item.email.toLowerCase().includes(columnFilters.email.toLowerCase())) {
+      if (columnFilters.email && !String(item.email || '').toLowerCase().includes(columnFilters.email.toLowerCase())) {
         return false
       }
-      if (columnFilters.userGroups && !item.userGroups.toLowerCase().includes(columnFilters.userGroups.toLowerCase())) {
+      if (columnFilters.userGroups && !String(item.userGroups || '').toLowerCase().includes(columnFilters.userGroups.toLowerCase())) {
         return false
       }
       
@@ -4841,20 +4841,20 @@ export function Generate() {
   // Filter and sort documents with enhanced filtering
   const filteredAndSortedDocuments = useMemo(() => {
     let filtered = documents.filter(document => {
-      // Apply column filters
-      if (columnFilters.documentName && !document.name.toLowerCase().includes(columnFilters.documentName.toLowerCase())) {
+      // Apply column filters - safely handle undefined/null values
+      if (columnFilters.documentName && !String(document.name || '').toLowerCase().includes(columnFilters.documentName.toLowerCase())) {
         return false
       }
-      if (columnFilters.planType && !document.planType.toLowerCase().includes(columnFilters.planType.toLowerCase())) {
+      if (columnFilters.planType && !String(document.planType || '').toLowerCase().includes(columnFilters.planType.toLowerCase())) {
         return false
       }
       if (columnFilters.egwp && columnFilters.egwp !== 'all' && document.egwp !== columnFilters.egwp) {
         return false
       }
-      if (columnFilters.folderName && !document.folderName.toLowerCase().includes(columnFilters.folderName.toLowerCase())) {
+      if (columnFilters.folderName && !String(document.folderName || '').toLowerCase().includes(columnFilters.folderName.toLowerCase())) {
         return false
       }
-      if (columnFilters.folderVersion && !document.folderVersion.toLowerCase().includes(columnFilters.folderVersion.toLowerCase())) {
+      if (columnFilters.folderVersion && !String(document.folderVersion || '').toLowerCase().includes(columnFilters.folderVersion.toLowerCase())) {
         return false
       }
       return true

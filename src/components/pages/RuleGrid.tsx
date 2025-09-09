@@ -141,24 +141,24 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     return safeRules.filter(rule => {
       // Text filters - safely handle undefined/null values
       if (columnFilters.ruleId && columnFilters.ruleId.trim()) {
-        const ruleIdValue = rule.ruleId || '';
+        const ruleIdValue = String(rule.ruleId || '');
         if (!ruleIdValue.toLowerCase().includes(columnFilters.ruleId.toLowerCase())) return false;
       }
       if (columnFilters.effectiveDate && columnFilters.effectiveDate.trim()) {
-        const effectiveDateValue = rule.effectiveDate || '';
+        const effectiveDateValue = String(rule.effectiveDate || '');
         if (!effectiveDateValue.toLowerCase().includes(columnFilters.effectiveDate.toLowerCase())) return false;
       }
       if (columnFilters.description && columnFilters.description.trim()) {
-        const descriptionValue = rule.description || '';
+        const descriptionValue = String(rule.description || '');
         if (!descriptionValue.toLowerCase().includes(columnFilters.description.toLowerCase())) return false;
       }
 
       if (columnFilters.english && columnFilters.english.trim()) {
-        const englishValue = rule.english || '';
+        const englishValue = String(rule.english || '');
         if (!englishValue.toLowerCase().includes(columnFilters.english.toLowerCase())) return false;
       }
       if (columnFilters.spanish && columnFilters.spanish.trim()) {
-        const spanishValue = rule.spanish || '';
+        const spanishValue = String(rule.spanish || '');
         if (!spanishValue.toLowerCase().includes(columnFilters.spanish.toLowerCase())) return false;
       }
 
