@@ -55,7 +55,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   const [pageSize, setPageSize] = useState(50);
   
   // Column resizing state with persistence
-    select: 48,
+  const [columnWidths, setColumnWidths] = useKV('rule-grid-column-widths', {
     select: 48,
     effectiveDate: 160,
     version: 96,
