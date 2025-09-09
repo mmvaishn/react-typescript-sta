@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ChevronDown, Search, Pencil, Lock, MoreHorizontal } from '@phosphor-icons/react';
+import { ChevronDown, Search, Pencil, Lock, MoreHorizontal, Plus } from '@phosphor-icons/react';
+import { CMLDialog } from './CMLDialog';
 
 interface MedicareEOCMasterListProps {
   onNavigate: (page: string) => void;
@@ -15,6 +16,35 @@ export function MedicareEOCMasterList({ onNavigate }: MedicareEOCMasterListProps
   const [instances, setInstances] = useKV<string>('medicare-eoc-instances', 'Medicare EOC');
   const [section, setSection] = useKV<string>('medicare-eoc-section', 'Medicare EOC Cover Page');
   const [activeTab, setActiveTab] = useKV<string>('medicare-eoc-tab', 'Errors');
+  const [cmlDialogOpen, setCmlDialogOpen] = useState(false);
+  const [documentContent, setDocumentContent] = useKV<string>('global-template-content', `
+    <div class="text-sm text-gray-600">
+      {{ELSE}} {{IF:[GlobalRule[GR157]=true]}}
+    </div>
+    <div class="text-base font-medium">
+      Medicare Advantage with prescription drugs
+    </div>
+    <div class="text-sm text-gray-600">
+      {{ELSE}}
+    </div>
+    <div class="text-sm text-gray-600">
+      {{IF:[Medicare[DoesyourPlanofferaPrescrptionPartDbenefit]=YES]}}
+    </div>
+    <div class="text-base font-medium">
+      Medicare Advantage plan with prescription drugs
+    </div>
+    <div class="text-sm text-gray-600">
+      {{ELSE}} {{IF:[Medicare[PlanType]=Medicare Prescription Drug Plan]}}
+    </div>
+  `.trim());
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  const handleInsertContent = (content: string) => {
+    setDocumentContent(current => {
+      // Insert the content at the end of current content
+      return current + '\n' + content;
+    });
+  };
 
   const sectionOptions = [
     'Medicare EOC Cover Page',
@@ -144,6 +174,19 @@ export function MedicareEOCMasterList({ onNavigate }: MedicareEOCMasterListProps
               
               <div className="mx-2 h-4 w-px bg-border"></div>
               
+              {/* CML Button */}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setCmlDialogOpen(true)}
+                className="text-xs px-3 py-1 h-7 bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <Plus size={12} className="mr-1" />
+                CML
+              </Button>
+
+              <div className="mx-2 h-4 w-px bg-border"></div>
+              
               <Button variant="ghost" size="sm" className="p-1 font-bold">
                 B
               </Button>
@@ -190,26 +233,16 @@ export function MedicareEOCMasterList({ onNavigate }: MedicareEOCMasterListProps
 
           {/* Document Content */}
           <div className="p-6 bg-white text-black">
-            <div className="space-y-4">
-              <div className="text-sm text-gray-600">
-                {'{{ELSE}} {{IF:[GlobalRule[GR157]=true]}}'}
-              </div>
-              <div className="text-base font-medium">
-                Medicare Advantage with prescription drugs
-              </div>
-              <div className="text-sm text-gray-600">
-                {'{{ELSE}}'}
-              </div>
-              <div className="text-sm text-gray-600">
-                {'{{IF:[Medicare[DoesyourPlanofferaPrescrptionPartDbenefit]=YES]}}'}
-              </div>
-              <div className="text-base font-medium">
-                Medicare Advantage plan with prescription drugs
-              </div>
-              <div className="text-sm text-gray-600">
-                {'{{ELSE}} {{IF:[Medicare[PlanType]=Medicare Prescription Drug Plan]}}'}
-              </div>
-            </div>
+            <div 
+              ref={contentRef}
+              className="space-y-4 min-h-[400px]"
+              contentEditable
+              suppressContentEditableWarning
+              dangerouslySetInnerHTML={{ __html: documentContent }}
+              onBlur={(e) => {
+                setDocumentContent(e.currentTarget.innerHTML);
+              }}
+            />
           </div>
         </div>
 
@@ -278,6 +311,13 @@ export function MedicareEOCMasterList({ onNavigate }: MedicareEOCMasterListProps
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* CML Dialog */}
+      <CMLDialog
+        open={cmlDialogOpen}
+        onClose={() => setCmlDialogOpen(false)}
+        onInsert={handleInsertContent}
+      />
     </div>
   );
 }
