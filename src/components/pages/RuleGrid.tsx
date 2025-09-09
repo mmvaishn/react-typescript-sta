@@ -87,6 +87,106 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   const [startWidth, setStartWidth] = useState(0);
   const tableRef = useRef<HTMLDivElement>(null);
   
+  // Column filters state
+  const [columnFilters, setColumnFilters] = useKV('rule-grid-column-filters', {
+    ruleId: '',
+    effectiveDate: '',
+    description: '',
+    version: [] as string[],
+    benefitType: [] as string[],
+    businessArea: [] as string[],
+    subBusinessArea: [] as string[],
+    templateName: [] as string[],
+    serviceId: [] as string[],
+    cmsRegulated: 'all' as 'all' | 'true' | 'false',
+    chapterName: [] as string[],
+    sectionName: [] as string[],
+    subsectionName: [] as string[],
+    serviceGroup: [] as string[],
+    sourceMapping: [] as string[],
+    tiers: [] as string[],
+    key: [] as string[],
+
+    isTabular: 'all' as 'all' | 'true' | 'false',
+    english: '',
+    englishStatus: [] as string[],
+    spanish: '',
+    spanishStatus: [] as string[],
+    published: 'all' as 'all' | 'true' | 'false'
+  });
+
+  // Get unique values for each column
+  const uniqueValues = useMemo(() => ({
+    ruleId: [...new Set(safeRules.map(r => r.ruleId).filter(Boolean))],
+    effectiveDate: [...new Set(safeRules.map(r => r.effectiveDate).filter(Boolean))],
+    version: [...new Set(safeRules.map(r => r.version).filter(Boolean))],
+    benefitType: [...new Set(safeRules.map(r => r.benefitType).filter(Boolean))],
+    serviceId: [...new Set(safeRules.map(r => r.serviceId).filter(Boolean))],
+    chapterName: [...new Set(safeRules.map(r => r.chapterName).filter(Boolean))],
+    sectionName: [...new Set(safeRules.map(r => r.sectionName).filter(Boolean))],
+    subsectionName: [...new Set(safeRules.map(r => r.subsectionName).filter(Boolean))],
+    serviceGroup: [...new Set(safeRules.map(r => r.serviceGroup).filter(Boolean))],
+    sourceMapping: [...new Set(safeRules.map(r => r.sourceMapping).filter(Boolean))],
+    tiers: [...new Set(safeRules.map(r => r.tiers).filter(Boolean))],
+    key: [...new Set(safeRules.map(r => r.key).filter(Boolean))],
+    englishStatus: [...new Set(safeRules.map(r => r.englishStatus).filter(Boolean))],
+    spanishStatus: [...new Set(safeRules.map(r => r.spanishStatus).filter(Boolean))]
+  }), [safeRules]);
+
+  // Apply column filters directly to rules
+  const columnFilteredRules = useMemo(() => {
+    return safeRules.filter(rule => {
+      // Text filters
+      if (columnFilters.ruleId && !rule.ruleId?.toLowerCase().includes(columnFilters.ruleId.toLowerCase())) return false;
+      if (columnFilters.effectiveDate && !rule.effectiveDate?.toLowerCase().includes(columnFilters.effectiveDate.toLowerCase())) return false;
+      if (columnFilters.description && !rule.description?.toLowerCase().includes(columnFilters.description.toLowerCase())) return false;
+
+      if (columnFilters.english && !rule.english?.toLowerCase().includes(columnFilters.english.toLowerCase())) return false;
+      if (columnFilters.spanish && !rule.spanish?.toLowerCase().includes(columnFilters.spanish.toLowerCase())) return false;
+
+      // Multi-select filters
+      if (columnFilters.version.length > 0 && !columnFilters.version.includes(rule.version || '')) return false;
+      if (columnFilters.benefitType.length > 0 && !columnFilters.benefitType.includes(rule.benefitType || '')) return false;
+      if (columnFilters.businessArea.length > 0 && !columnFilters.businessArea.includes(rule.businessArea || '')) return false;
+      if (columnFilters.subBusinessArea.length > 0 && !columnFilters.subBusinessArea.includes(rule.subBusinessArea || '')) return false;
+      if (columnFilters.templateName.length > 0 && !columnFilters.templateName.includes(rule.templateName || '')) return false;
+      if (columnFilters.serviceId.length > 0 && !columnFilters.serviceId.includes(rule.serviceId || '')) return false;
+      if (columnFilters.chapterName.length > 0 && !columnFilters.chapterName.includes(rule.chapterName || '')) return false;
+      if (columnFilters.sectionName.length > 0 && !columnFilters.sectionName.includes(rule.sectionName || '')) return false;
+      if (columnFilters.subsectionName.length > 0 && !columnFilters.subsectionName.includes(rule.subsectionName || '')) return false;
+      if (columnFilters.serviceGroup.length > 0 && !columnFilters.serviceGroup.includes(rule.serviceGroup || '')) return false;
+      if (columnFilters.sourceMapping.length > 0 && !columnFilters.sourceMapping.includes(rule.sourceMapping || '')) return false;
+      if (columnFilters.tiers.length > 0 && !columnFilters.tiers.includes(rule.tiers || '')) return false;
+      if (columnFilters.key.length > 0 && !columnFilters.key.includes(rule.key || '')) return false;
+      if (columnFilters.englishStatus.length > 0 && !columnFilters.englishStatus.includes(rule.englishStatus || '')) return false;
+      if (columnFilters.spanishStatus.length > 0 && !columnFilters.spanishStatus.includes(rule.spanishStatus || '')) return false;
+
+      // Boolean filters
+      if (columnFilters.cmsRegulated !== 'all') {
+        const expectedValue = columnFilters.cmsRegulated === 'true';
+        if (rule.cmsRegulated !== expectedValue) return false;
+      }
+      
+      if (columnFilters.isTabular !== 'all') {
+        const expectedValue = columnFilters.isTabular === 'true';
+        if (rule.isTabular !== expectedValue) return false;
+      }
+
+      if (columnFilters.published !== 'all') {
+        const expectedValue = columnFilters.published === 'true';
+        if (rule.published !== expectedValue) return false;
+      }
+
+      return true;
+    });
+  }, [safeRules, columnFilters]);
+
+  // Pagination calculations
+  const totalPages = Math.max(1, Math.ceil(columnFilteredRules.length / pageSize));
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, columnFilteredRules.length);
+  const paginatedRules = columnFilteredRules.slice(startIndex, endIndex);
+  
   // Column resizing functions
   const handleMouseDown = useCallback((e: React.MouseEvent, columnKey: string) => {
     e.preventDefault();
@@ -187,106 +287,6 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
       };
     }
   }, [isResizing, handleMouseMove, handleMouseUp]);
-
-  // Column-specific filters state
-  const [columnFilters, setColumnFilters] = useState({
-    ruleId: '',
-    effectiveDate: '',
-    version: [] as string[],
-    benefitType: [] as string[],
-    businessArea: [] as string[],
-    subBusinessArea: [] as string[],
-    description: '',
-    templateName: [] as string[],
-    serviceId: [] as string[],
-    cmsRegulated: 'all' as 'all' | 'true' | 'false',
-    chapterName: [] as string[],
-    sectionName: [] as string[],
-    subsectionName: [] as string[],
-    serviceGroup: [] as string[],
-    sourceMapping: [] as string[],
-    tiers: [] as string[],
-    key: [] as string[],
-
-    isTabular: 'all' as 'all' | 'true' | 'false',
-    english: '',
-    englishStatus: [] as string[],
-    spanish: '',
-    spanishStatus: [] as string[],
-    published: 'all' as 'all' | 'true' | 'false'
-  });
-
-  // Get unique values for each column
-  const uniqueValues = useMemo(() => ({
-    ruleId: [...new Set(safeRules.map(r => r.ruleId).filter(Boolean))],
-    effectiveDate: [...new Set(safeRules.map(r => r.effectiveDate).filter(Boolean))],
-    version: [...new Set(safeRules.map(r => r.version).filter(Boolean))],
-    benefitType: [...new Set(safeRules.map(r => r.benefitType).filter(Boolean))],
-    serviceId: [...new Set(safeRules.map(r => r.serviceId).filter(Boolean))],
-    chapterName: [...new Set(safeRules.map(r => r.chapterName).filter(Boolean))],
-    sectionName: [...new Set(safeRules.map(r => r.sectionName).filter(Boolean))],
-    subsectionName: [...new Set(safeRules.map(r => r.subsectionName).filter(Boolean))],
-    serviceGroup: [...new Set(safeRules.map(r => r.serviceGroup).filter(Boolean))],
-    sourceMapping: [...new Set(safeRules.map(r => r.sourceMapping).filter(Boolean))],
-    tiers: [...new Set(safeRules.map(r => r.tiers).filter(Boolean))],
-    key: [...new Set(safeRules.map(r => r.key).filter(Boolean))],
-    englishStatus: [...new Set(safeRules.map(r => r.englishStatus).filter(Boolean))],
-    spanishStatus: [...new Set(safeRules.map(r => r.spanishStatus).filter(Boolean))]
-  }), [safeRules]);
-
-  // Apply column filters directly to rules
-  const columnFilteredRules = useMemo(() => {
-    return safeRules.filter(rule => {
-      // Text filters
-      if (columnFilters.ruleId && !rule.ruleId?.toLowerCase().includes(columnFilters.ruleId.toLowerCase())) return false;
-      if (columnFilters.effectiveDate && !rule.effectiveDate?.toLowerCase().includes(columnFilters.effectiveDate.toLowerCase())) return false;
-      if (columnFilters.description && !rule.description?.toLowerCase().includes(columnFilters.description.toLowerCase())) return false;
-
-      if (columnFilters.english && !rule.english?.toLowerCase().includes(columnFilters.english.toLowerCase())) return false;
-      if (columnFilters.spanish && !rule.spanish?.toLowerCase().includes(columnFilters.spanish.toLowerCase())) return false;
-
-      // Multi-select filters
-      if (columnFilters.version.length > 0 && !columnFilters.version.includes(rule.version || '')) return false;
-      if (columnFilters.benefitType.length > 0 && !columnFilters.benefitType.includes(rule.benefitType || '')) return false;
-      if (columnFilters.businessArea.length > 0 && !columnFilters.businessArea.includes(rule.businessArea || '')) return false;
-      if (columnFilters.subBusinessArea.length > 0 && !columnFilters.subBusinessArea.includes(rule.subBusinessArea || '')) return false;
-      if (columnFilters.templateName.length > 0 && !columnFilters.templateName.includes(rule.templateName || '')) return false;
-      if (columnFilters.serviceId.length > 0 && !columnFilters.serviceId.includes(rule.serviceId || '')) return false;
-      if (columnFilters.chapterName.length > 0 && !columnFilters.chapterName.includes(rule.chapterName || '')) return false;
-      if (columnFilters.sectionName.length > 0 && !columnFilters.sectionName.includes(rule.sectionName || '')) return false;
-      if (columnFilters.subsectionName.length > 0 && !columnFilters.subsectionName.includes(rule.subsectionName || '')) return false;
-      if (columnFilters.serviceGroup.length > 0 && !columnFilters.serviceGroup.includes(rule.serviceGroup || '')) return false;
-      if (columnFilters.sourceMapping.length > 0 && !columnFilters.sourceMapping.includes(rule.sourceMapping || '')) return false;
-      if (columnFilters.tiers.length > 0 && !columnFilters.tiers.includes(rule.tiers || '')) return false;
-      if (columnFilters.key.length > 0 && !columnFilters.key.includes(rule.key || '')) return false;
-      if (columnFilters.englishStatus.length > 0 && !columnFilters.englishStatus.includes(rule.englishStatus || '')) return false;
-      if (columnFilters.spanishStatus.length > 0 && !columnFilters.spanishStatus.includes(rule.spanishStatus || '')) return false;
-
-      // Boolean filters
-      if (columnFilters.cmsRegulated !== 'all') {
-        const expectedValue = columnFilters.cmsRegulated === 'true';
-        if (rule.cmsRegulated !== expectedValue) return false;
-      }
-      
-      if (columnFilters.isTabular !== 'all') {
-        const expectedValue = columnFilters.isTabular === 'true';
-        if (rule.isTabular !== expectedValue) return false;
-      }
-
-      if (columnFilters.published !== 'all') {
-        const expectedValue = columnFilters.published === 'true';
-        if (rule.published !== expectedValue) return false;
-      }
-
-      return true;
-    });
-  }, [safeRules, columnFilters]);
-
-  // Pagination calculations
-  const totalPages = Math.max(1, Math.ceil(columnFilteredRules.length / pageSize));
-  const startIndex = (currentPage - 1) * pageSize;
-  const endIndex = Math.min(startIndex + pageSize, columnFilteredRules.length);
-  const paginatedRules = columnFilteredRules.slice(startIndex, endIndex);
 
   // Reset to first page when filters change
   useEffect(() => {
