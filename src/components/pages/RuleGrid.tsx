@@ -115,54 +115,101 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     published: 'all' as 'all' | 'true' | 'false'
   });
 
-  // Get unique values for each column
-  const uniqueValues = useMemo(() => ({
-    ruleId: [...new Set(safeRules.map(r => r.ruleId).filter(Boolean))],
-    effectiveDate: [...new Set(safeRules.map(r => r.effectiveDate).filter(Boolean))],
-    version: [...new Set(safeRules.map(r => r.version).filter(Boolean))],
-    benefitType: [...new Set(safeRules.map(r => r.benefitType).filter(Boolean))],
-    businessArea: [...new Set(safeRules.map(r => r.businessArea).filter(Boolean))],
-    subBusinessArea: [...new Set(safeRules.map(r => r.subBusinessArea).filter(Boolean))],
-    templateName: [...new Set(safeRules.map(r => r.templateName).filter(Boolean))],
-    serviceId: [...new Set(safeRules.map(r => r.serviceId).filter(Boolean))],
-    chapterName: [...new Set(safeRules.map(r => r.chapterName).filter(Boolean))],
-    sectionName: [...new Set(safeRules.map(r => r.sectionName).filter(Boolean))],
-    subsectionName: [...new Set(safeRules.map(r => r.subsectionName).filter(Boolean))],
-    serviceGroup: [...new Set(safeRules.map(r => r.serviceGroup).filter(Boolean))],
-    sourceMapping: [...new Set(safeRules.map(r => r.sourceMapping).filter(Boolean))],
-    tiers: [...new Set(safeRules.map(r => r.tiers).filter(Boolean))],
-    key: [...new Set(safeRules.map(r => r.key).filter(Boolean))],
-    englishStatus: [...new Set(safeRules.map(r => r.englishStatus).filter(Boolean))],
-    spanishStatus: [...new Set(safeRules.map(r => r.spanishStatus).filter(Boolean))]
-  }), [safeRules]);
+  // Get unique values for each column - optimized with early return and memoization
+  const uniqueValues = useMemo(() => {
+    if (safeRules.length === 0) {
+      return {
+        ruleId: [], effectiveDate: [], version: [], benefitType: [],
+        businessArea: [], subBusinessArea: [], templateName: [], serviceId: [],
+        chapterName: [], sectionName: [], subsectionName: [], serviceGroup: [],
+        sourceMapping: [], tiers: [], key: [], englishStatus: [], spanishStatus: []
+      };
+    }
+    
+    const uniqueSets = {
+      ruleId: new Set<string>(),
+      effectiveDate: new Set<string>(),
+      version: new Set<string>(),
+      benefitType: new Set<string>(),
+      businessArea: new Set<string>(),
+      subBusinessArea: new Set<string>(),
+      templateName: new Set<string>(),
+      serviceId: new Set<string>(),
+      chapterName: new Set<string>(),
+      sectionName: new Set<string>(),
+      subsectionName: new Set<string>(),
+      serviceGroup: new Set<string>(),
+      sourceMapping: new Set<string>(),
+      tiers: new Set<string>(),
+      key: new Set<string>(),
+      englishStatus: new Set<string>(),
+      spanishStatus: new Set<string>()
+    };
+    
+    // Single pass through rules to collect unique values
+    safeRules.forEach(rule => {
+      if (rule.ruleId) uniqueSets.ruleId.add(rule.ruleId);
+      if (rule.effectiveDate) uniqueSets.effectiveDate.add(rule.effectiveDate);
+      if (rule.version) uniqueSets.version.add(rule.version);
+      if (rule.benefitType) uniqueSets.benefitType.add(rule.benefitType);
+      if (rule.businessArea) uniqueSets.businessArea.add(rule.businessArea);
+      if (rule.subBusinessArea) uniqueSets.subBusinessArea.add(rule.subBusinessArea);
+      if (rule.templateName) uniqueSets.templateName.add(rule.templateName);
+      if (rule.serviceId) uniqueSets.serviceId.add(rule.serviceId);
+      if (rule.chapterName) uniqueSets.chapterName.add(rule.chapterName);
+      if (rule.sectionName) uniqueSets.sectionName.add(rule.sectionName);
+      if (rule.subsectionName) uniqueSets.subsectionName.add(rule.subsectionName);
+      if (rule.serviceGroup) uniqueSets.serviceGroup.add(rule.serviceGroup);
+      if (rule.sourceMapping) uniqueSets.sourceMapping.add(rule.sourceMapping);
+      if (rule.tiers) uniqueSets.tiers.add(rule.tiers);
+      if (rule.key) uniqueSets.key.add(rule.key);
+      if (rule.englishStatus) uniqueSets.englishStatus.add(rule.englishStatus);
+      if (rule.spanishStatus) uniqueSets.spanishStatus.add(rule.spanishStatus);
+    });
+    
+    return {
+      ruleId: Array.from(uniqueSets.ruleId),
+      effectiveDate: Array.from(uniqueSets.effectiveDate),
+      version: Array.from(uniqueSets.version),
+      benefitType: Array.from(uniqueSets.benefitType),
+      businessArea: Array.from(uniqueSets.businessArea),
+      subBusinessArea: Array.from(uniqueSets.subBusinessArea),
+      templateName: Array.from(uniqueSets.templateName),
+      serviceId: Array.from(uniqueSets.serviceId),
+      chapterName: Array.from(uniqueSets.chapterName),
+      sectionName: Array.from(uniqueSets.sectionName),
+      subsectionName: Array.from(uniqueSets.subsectionName),
+      serviceGroup: Array.from(uniqueSets.serviceGroup),
+      sourceMapping: Array.from(uniqueSets.sourceMapping),
+      tiers: Array.from(uniqueSets.tiers),
+      key: Array.from(uniqueSets.key),
+      englishStatus: Array.from(uniqueSets.englishStatus),
+      spanishStatus: Array.from(uniqueSets.spanishStatus)
+    };
+  }, [safeRules]);
 
-  // Apply column filters directly to rules
+  // Apply column filters directly to rules - optimized filtering
   const columnFilteredRules = useMemo(() => {
+    if (safeRules.length === 0) return [];
+    
     return safeRules.filter(rule => {
-      // Text filters - safely handle undefined/null values
-      if (columnFilters.ruleId && columnFilters.ruleId.trim()) {
-        const ruleIdValue = String(rule.ruleId || '');
-        if (!ruleIdValue.toLowerCase().includes(columnFilters.ruleId.toLowerCase())) return false;
+      // Early return for simple boolean checks
+      if (columnFilters.cmsRegulated !== 'all') {
+        const expectedValue = columnFilters.cmsRegulated === 'true';
+        if (rule.cmsRegulated !== expectedValue) return false;
       }
-      if (columnFilters.effectiveDate && columnFilters.effectiveDate.trim()) {
-        const effectiveDateValue = String(rule.effectiveDate || '');
-        if (!effectiveDateValue.toLowerCase().includes(columnFilters.effectiveDate.toLowerCase())) return false;
-      }
-      if (columnFilters.description && columnFilters.description.trim()) {
-        const descriptionValue = String(rule.description || '');
-        if (!descriptionValue.toLowerCase().includes(columnFilters.description.toLowerCase())) return false;
+      
+      if (columnFilters.isTabular !== 'all') {
+        const expectedValue = columnFilters.isTabular === 'true';
+        if (rule.isTabular !== expectedValue) return false;
       }
 
-      if (columnFilters.english && columnFilters.english.trim()) {
-        const englishValue = String(rule.english || '');
-        if (!englishValue.toLowerCase().includes(columnFilters.english.toLowerCase())) return false;
-      }
-      if (columnFilters.spanish && columnFilters.spanish.trim()) {
-        const spanishValue = String(rule.spanish || '');
-        if (!spanishValue.toLowerCase().includes(columnFilters.spanish.toLowerCase())) return false;
+      if (columnFilters.published !== 'all') {
+        const expectedValue = columnFilters.published === 'true';
+        if (rule.published !== expectedValue) return false;
       }
 
-      // Multi-select filters
+      // Multi-select filters - early returns for empty arrays
       if (columnFilters.version.length > 0 && !columnFilters.version.includes(rule.version || '')) return false;
       if (columnFilters.benefitType.length > 0 && !columnFilters.benefitType.includes(rule.benefitType || '')) return false;
       if (columnFilters.businessArea.length > 0 && !columnFilters.businessArea.includes(rule.businessArea || '')) return false;
@@ -179,20 +226,21 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
       if (columnFilters.englishStatus.length > 0 && !columnFilters.englishStatus.includes(rule.englishStatus || '')) return false;
       if (columnFilters.spanishStatus.length > 0 && !columnFilters.spanishStatus.includes(rule.spanishStatus || '')) return false;
 
-      // Boolean filters
-      if (columnFilters.cmsRegulated !== 'all') {
-        const expectedValue = columnFilters.cmsRegulated === 'true';
-        if (rule.cmsRegulated !== expectedValue) return false;
-      }
+      // Text filters - only process if filter exists
+      const textFilters = [
+        { filter: columnFilters.ruleId, value: rule.ruleId },
+        { filter: columnFilters.effectiveDate, value: rule.effectiveDate },
+        { filter: columnFilters.description, value: rule.description },
+        { filter: columnFilters.english, value: rule.english },
+        { filter: columnFilters.spanish, value: rule.spanish }
+      ];
       
-      if (columnFilters.isTabular !== 'all') {
-        const expectedValue = columnFilters.isTabular === 'true';
-        if (rule.isTabular !== expectedValue) return false;
-      }
-
-      if (columnFilters.published !== 'all') {
-        const expectedValue = columnFilters.published === 'true';
-        if (rule.published !== expectedValue) return false;
+      for (const { filter, value } of textFilters) {
+        if (filter && filter.trim()) {
+          const ruleValue = String(value || '').toLowerCase();
+          const filterValue = filter.toLowerCase();
+          if (!ruleValue.includes(filterValue)) return false;
+        }
       }
 
       return true;

@@ -26,14 +26,14 @@ export function DigitalContentManager({ onNavigate, onEditRule }: DigitalContent
         setRules(mockRules);
       });
     }
-  }, [rules, setRules]);
+  }, []); // Remove dependency on rules to prevent infinite loops
 
-  // Auto-load Language Repeater 2 data when Digital Content Manager is loaded
+  // Auto-load Language Repeater 2 data once when component mounts
   useEffect(() => {
-    if (!langRepeaterDataLoaded && Array.isArray(rules)) {
+    if (!langRepeaterDataLoaded) {
       loadLanguageRepeaterData();
     }
-  }, [langRepeaterDataLoaded, rules]);
+  }, [langRepeaterDataLoaded]); // Remove rules dependency
 
   // Mock data extraction from Language Repeater 2 - simulates PDF parsing
   const extractLanguageRepeaterData = async (): Promise<Array<{
@@ -43,8 +43,7 @@ export function DigitalContentManager({ onNavigate, onEditRule }: DigitalContent
     subBusinessArea: string;
     description: string;
   }>> => {
-    // Simulate PDF processing delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    // Remove artificial delay for better performance
     
     // Mock extracted data that would come from Language Repeater 2 PDF
     return [
@@ -88,104 +87,116 @@ export function DigitalContentManager({ onNavigate, onEditRule }: DigitalContent
 
   const loadLanguageRepeaterData = async () => {
     try {
-      // Extract data from Language Repeater 2 PDF
-      const extractedData = await extractLanguageRepeaterData();
-      
-      let matched = 0;
-      let created = 0;
-      let updated = 0;
-      const processedTitles: string[] = [];
+      // Get current rules from the callback to ensure we have the latest data
+      setRules(current => {
+        const currentRules = Array.isArray(current) ? current : [];
+        
+        // Extract data from Language Repeater 2 PDF
+        extractLanguageRepeaterData().then(extractedData => {
+          let matched = 0;
+          let created = 0;
+          let updated = 0;
+          const processedTitles: string[] = [];
 
-      // Process each extracted item
-      for (const item of extractedData) {
-        const existingRule = rules.find(rule => {
-          if (!rule.templateName || !item.title) return false;
-          const ruleTemplateName = String(rule.templateName).toLowerCase();
-          const itemTitle = String(item.title).toLowerCase();
-          return ruleTemplateName.includes(itemTitle) || itemTitle.includes(ruleTemplateName);
+          // Process each extracted item
+          for (const item of extractedData) {
+            const existingRule = currentRules.find(rule => {
+              if (!rule.templateName || !item.title) return false;
+              const ruleTemplateName = String(rule.templateName).toLowerCase();
+              const itemTitle = String(item.title).toLowerCase();
+              return ruleTemplateName.includes(itemTitle) || itemTitle.includes(ruleTemplateName);
+            });
+
+            if (existingRule) {
+              // Update existing rule with new data
+              const updatedRule: RuleData = {
+                ...existingRule,
+                benefitType: item.benefitType,
+                businessArea: item.businessArea,
+                subBusinessArea: item.subBusinessArea,
+                description: item.description,
+                lastModified: new Date().toISOString(),
+                lastModifiedBy: 'Language Repeater 2 Auto-Load'
+              };
+
+              setRules(current => 
+                current.map(rule => 
+                  rule.id === existingRule.id ? updatedRule : rule
+                )
+              );
+
+              matched++;
+              updated++;
+              processedTitles.push(item.title);
+
+              // Log the update activity
+              if ((window as any).addActivityLog) {
+                (window as any).addActivityLog({
+                  user: 'System',
+                  action: 'upload',
+                  target: `Rule ${existingRule.ruleId}`,
+                  details: `Updated from Language Repeater 2: ${item.title}`,
+                  ruleId: existingRule.ruleId,
+                });
+              }
+            } else {
+              // Create new rule for unmatched titles
+              const newRuleId = `RULE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+              const newRule: RuleData = {
+                id: newRuleId,
+                ruleId: newRuleId,
+                templateName: item.title,
+                benefitType: item.benefitType,
+                businessArea: item.businessArea,
+                subBusinessArea: item.subBusinessArea,
+                description: item.description,
+                version: "1.0",
+                effectiveDate: "2025-01-01",
+                lastModified: new Date().toISOString(),
+                lastModifiedBy: 'Language Repeater 2 Auto-Load',
+                status: 'Draft',
+                category: 'Medicare',
+                language: "English",
+                repeaterType: "ANOC-EOC",
+                published: false
+              };
+
+              setRules(current => [newRule, ...current]);
+              created++;
+              processedTitles.push(item.title);
+
+              // Log the creation activity
+              if ((window as any).addActivityLog) {
+                (window as any).addActivityLog({
+                  user: 'System',
+                  action: 'create',
+                  target: `Rule ${newRule.ruleId}`,
+                  details: `Created from Language Repeater 2: ${item.title}`,
+                  ruleId: newRule.ruleId,
+                });
+              }
+            }
+          }
+
+          setLangRepeaterDataLoaded(true);
+
+          // Show summary toast only if there were changes
+          if (matched > 0 || created > 0) {
+            toast.success(
+              `Language Repeater 2 data loaded successfully! ${matched} titles matched, ${updated} updated, ${created} created.`,
+              {
+                description: `Processed titles: ${processedTitles.join(', ')}`,
+                duration: 3000, // Reduce toast duration
+              }
+            );
+          }
+        }).catch(error => {
+          console.error('Error loading Language Repeater 2 data:', error);
+          toast.error('Failed to load Language Repeater 2 data');
         });
 
-        if (existingRule) {
-          // Update existing rule with new data
-          const updatedRule: RuleData = {
-            ...existingRule,
-            benefitType: item.benefitType,
-            businessArea: item.businessArea,
-            subBusinessArea: item.subBusinessArea,
-            description: item.description,
-            lastModified: new Date().toISOString(),
-            lastModifiedBy: 'Language Repeater 2 Auto-Load'
-          };
-
-          setRules(current => 
-            current.map(rule => 
-              rule.id === existingRule.id ? updatedRule : rule
-            )
-          );
-
-          matched++;
-          updated++;
-          processedTitles.push(item.title);
-
-          // Log the update activity
-          if ((window as any).addActivityLog) {
-            (window as any).addActivityLog({
-              user: 'System',
-              action: 'upload',
-              target: `Rule ${existingRule.ruleId}`,
-              details: `Updated from Language Repeater 2: ${item.title}`,
-              ruleId: existingRule.ruleId,
-            });
-          }
-        } else {
-          // Create new rule for unmatched titles
-          const newRuleId = `RULE-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-          const newRule: RuleData = {
-            id: newRuleId,
-            ruleId: newRuleId,
-            templateName: item.title,
-            benefitType: item.benefitType,
-            businessArea: item.businessArea,
-            subBusinessArea: item.subBusinessArea,
-            description: item.description,
-            version: "1.0",
-            effectiveDate: "2025-01-01",
-            lastModified: new Date().toISOString(),
-            lastModifiedBy: 'Language Repeater 2 Auto-Load',
-            status: 'Draft',
-            category: 'Medicare',
-            language: "English",
-            repeaterType: "ANOC-EOC",
-            published: false
-          };
-
-          setRules(current => [newRule, ...current]);
-          created++;
-          processedTitles.push(item.title);
-
-          // Log the creation activity
-          if ((window as any).addActivityLog) {
-            (window as any).addActivityLog({
-              user: 'System',
-              action: 'create',
-              target: `Rule ${newRule.ruleId}`,
-              details: `Created from Language Repeater 2: ${item.title}`,
-              ruleId: newRule.ruleId,
-            });
-          }
-        }
-      }
-
-      setLangRepeaterDataLoaded(true);
-
-      // Show summary toast
-      toast.success(
-        `Language Repeater 2 data loaded successfully! ${matched} titles matched, ${updated} updated, ${created} created.`,
-        {
-          description: `Processed titles: ${processedTitles.join(', ')}`,
-          duration: 5000,
-        }
-      );
+        return currentRules;
+      });
 
     } catch (error) {
       console.error('Error loading Language Repeater 2 data:', error);

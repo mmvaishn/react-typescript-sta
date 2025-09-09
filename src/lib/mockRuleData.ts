@@ -114,128 +114,127 @@ function getRandomDate(daysAgo: number): string {
 
 export function generateMockRuleData(): Promise<RuleData[]> {
   return new Promise((resolve) => {
-    setTimeout(() => {
-      const rules: RuleData[] = [];
-      
-      // Generate data matching the new column structure
-      const dataStructure = [
-        { template: 'ANOC', chapter: 'ANOC Cover Page', section: 'Cover Page', subsection: '' },
-        { template: 'ANOC', chapter: 'ANOC Cover Page', section: 'Cover Page', subsection: '' },
-        { template: 'EOC', chapter: 'Chapter 1', section: 'Section 1', subsection: 'Section 1.2' },
-        { template: 'EOC', chapter: 'Chapter 1', section: 'Section 1', subsection: '1.1' },
-        { template: 'EOC', chapter: 'Chapter 4', section: 'Section 1', subsection: 'Section 1.3' },
-        { template: 'EOC', chapter: 'Chapter 5', section: 'Section 4', subsection: 'Section 4.1' },
-        { template: 'EOC', chapter: 'Chapter 4', section: 'Section 1', subsection: 'Section 1.2' },
-        { template: 'EOC', chapter: 'Chapter 5', section: 'Section 3', subsection: 'Section 3.1' },
-        { template: 'EOC', chapter: 'Chapter 5', section: 'Section 2', subsection: 'Section 2.1' },
-        { template: 'EOC', chapter: 'Chapter 4', section: 'Section 1', subsection: 'Section 1.1' }
-      ];
-      
-      dataStructure.forEach((item, i) => {
-        rules.push({
-          id: `rule-${i + 1}`,
-          ruleId: `R${String(i + 1).padStart(4, '0')}`,
-          effectiveDate: '01/01/2025',
-          version: `${Math.floor(Math.random() * 3) + 1}.${Math.floor(Math.random() * 10)}`,
-          benefitType: benefitTypes[Math.floor(Math.random() * benefitTypes.length)],
-          businessArea: businessAreas[Math.floor(Math.random() * businessAreas.length)],
-          subBusinessArea: subBusinessAreas[Math.floor(Math.random() * subBusinessAreas.length)],
-          description: sampleDescriptions[Math.floor(Math.random() * sampleDescriptions.length)],
-          templateName: item.template,
-          serviceId: `SRV${String(i + 1).padStart(3, '0')}`,
-          cmsRegulated: Math.random() > 0.6,
-          chapterName: item.chapter,
-          sectionName: item.section,
-          subsectionName: item.subsection,
-          serviceGroup: serviceGroups[Math.floor(Math.random() * serviceGroups.length)],
-          sourceMapping: `MAP${String(i + 1).padStart(3, '0')}`,
-          tiers: `Tier ${Math.floor(Math.random() * 3) + 1}`,
-          key: `KEY${String(i + 1).padStart(3, '0')}`,
-          rule: sampleRules[Math.floor(Math.random() * sampleRules.length)],
-          isTabular: Math.random() > 0.7,
-          english: sampleEnglishText[Math.floor(Math.random() * sampleEnglishText.length)],
-          englishStatus: statusOptions[Math.floor(Math.random() * statusOptions.length)],
-          spanish: sampleSpanishText[Math.floor(Math.random() * sampleSpanishText.length)],
-          spanishStatus: statusOptions[Math.floor(Math.random() * statusOptions.length)],
-          published: Math.random() > 0.5,
-          createdAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000),
-          lastModified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
-        });
-      });
-      
-      // Add additional random entries
-      for (let i = 10; i < 25; i++) {
-        const template = templateNames[Math.floor(Math.random() * templateNames.length)];
-        const chapters = chapterNames[template];
-        const chapter = chapters[Math.floor(Math.random() * chapters.length)];
-        const sections = sectionNames[chapter];
-        const section = sections[Math.floor(Math.random() * sections.length)];
-        const subsections = subsectionNames[section];
-        const subsection = subsections[Math.floor(Math.random() * subsections.length)];
-        
-        rules.push({
-          id: `rule-${i + 1}`,
-          ruleId: `R${String(i + 1).padStart(4, '0')}`,
-          effectiveDate: '01/01/2025',
-          version: `${Math.floor(Math.random() * 3) + 1}.${Math.floor(Math.random() * 10)}`,
-          benefitType: benefitTypes[Math.floor(Math.random() * benefitTypes.length)],
-          businessArea: businessAreas[Math.floor(Math.random() * businessAreas.length)],
-          subBusinessArea: subBusinessAreas[Math.floor(Math.random() * subBusinessAreas.length)],
-          description: sampleDescriptions[Math.floor(Math.random() * sampleDescriptions.length)],
-          templateName: template,
-          serviceId: `SRV${String(i + 1).padStart(3, '0')}`,
-          cmsRegulated: Math.random() > 0.6,
-          chapterName: chapter,
-          sectionName: section,
-          subsectionName: subsection,
-          serviceGroup: serviceGroups[Math.floor(Math.random() * serviceGroups.length)],
-          sourceMapping: `MAP${String(i + 1).padStart(3, '0')}`,
-          tiers: `Tier ${Math.floor(Math.random() * 3) + 1}`,
-          key: `KEY${String(i + 1).padStart(3, '0')}`,
-          rule: sampleRules[Math.floor(Math.random() * sampleRules.length)],
-          isTabular: Math.random() > 0.7,
-          english: sampleEnglishText[Math.floor(Math.random() * sampleEnglishText.length)],
-          englishStatus: statusOptions[Math.floor(Math.random() * statusOptions.length)],
-          spanish: sampleSpanishText[Math.floor(Math.random() * sampleSpanishText.length)],
-          spanishStatus: statusOptions[Math.floor(Math.random() * statusOptions.length)],
-          published: Math.random() > 0.5,
-          createdAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000),
-          lastModified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
-        });
-      }
-      
-      // Add specific RULE - 175 that can be deleted
+    // Remove artificial delay for better performance
+    const rules: RuleData[] = [];
+    
+    // Generate data matching the new column structure
+    const dataStructure = [
+      { template: 'ANOC', chapter: 'ANOC Cover Page', section: 'Cover Page', subsection: '' },
+      { template: 'ANOC', chapter: 'ANOC Cover Page', section: 'Cover Page', subsection: '' },
+      { template: 'EOC', chapter: 'Chapter 1', section: 'Section 1', subsection: 'Section 1.2' },
+      { template: 'EOC', chapter: 'Chapter 1', section: 'Section 1', subsection: '1.1' },
+      { template: 'EOC', chapter: 'Chapter 4', section: 'Section 1', subsection: 'Section 1.3' },
+      { template: 'EOC', chapter: 'Chapter 5', section: 'Section 4', subsection: 'Section 4.1' },
+      { template: 'EOC', chapter: 'Chapter 4', section: 'Section 1', subsection: 'Section 1.2' },
+      { template: 'EOC', chapter: 'Chapter 5', section: 'Section 3', subsection: 'Section 3.1' },
+      { template: 'EOC', chapter: 'Chapter 5', section: 'Section 2', subsection: 'Section 2.1' },
+      { template: 'EOC', chapter: 'Chapter 4', section: 'Section 1', subsection: 'Section 1.1' }
+    ];
+    
+    dataStructure.forEach((item, i) => {
       rules.push({
-        id: 'rule-175',
-        ruleId: '175',
+        id: `rule-${i + 1}`,
+        ruleId: `R${String(i + 1).padStart(4, '0')}`,
         effectiveDate: '01/01/2025',
-        version: '1.0',
-        benefitType: 'Medical',
-        businessArea: 'Clinical',
-        subBusinessArea: 'Primary Care',
-        description: 'Rule 175 - Test rule for deletion',
-        templateName: 'EOC',
-        serviceId: 'SRV175',
-        cmsRegulated: true,
-        chapterName: 'Chapter 1',
-        sectionName: 'Section 1',
-        subsectionName: '1.1',
-        serviceGroup: 'Medical Services',
-        sourceMapping: 'MAP175',
-        tiers: 'Tier 1',
-        key: 'KEY175',
-        rule: 'This is test rule 175 that will be deleted automatically',
-        isTabular: false,
-        english: 'This is rule 175 content in English',
-        englishStatus: 'Draft',
-        spanish: 'Este es el contenido de la regla 175 en español',
-        spanishStatus: 'Draft',
-        published: false,
-        createdAt: new Date(),
-        lastModified: new Date()
+        version: `${Math.floor(Math.random() * 3) + 1}.${Math.floor(Math.random() * 10)}`,
+        benefitType: benefitTypes[Math.floor(Math.random() * benefitTypes.length)],
+        businessArea: businessAreas[Math.floor(Math.random() * businessAreas.length)],
+        subBusinessArea: subBusinessAreas[Math.floor(Math.random() * subBusinessAreas.length)],
+        description: sampleDescriptions[Math.floor(Math.random() * sampleDescriptions.length)],
+        templateName: item.template,
+        serviceId: `SRV${String(i + 1).padStart(3, '0')}`,
+        cmsRegulated: Math.random() > 0.6,
+        chapterName: item.chapter,
+        sectionName: item.section,
+        subsectionName: item.subsection,
+        serviceGroup: serviceGroups[Math.floor(Math.random() * serviceGroups.length)],
+        sourceMapping: `MAP${String(i + 1).padStart(3, '0')}`,
+        tiers: `Tier ${Math.floor(Math.random() * 3) + 1}`,
+        key: `KEY${String(i + 1).padStart(3, '0')}`,
+        rule: sampleRules[Math.floor(Math.random() * sampleRules.length)],
+        isTabular: Math.random() > 0.7,
+        english: sampleEnglishText[Math.floor(Math.random() * sampleEnglishText.length)],
+        englishStatus: statusOptions[Math.floor(Math.random() * statusOptions.length)],
+        spanish: sampleSpanishText[Math.floor(Math.random() * sampleSpanishText.length)],
+        spanishStatus: statusOptions[Math.floor(Math.random() * statusOptions.length)],
+        published: Math.random() > 0.5,
+        createdAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000),
+        lastModified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
       });
+    });
+    
+    // Add additional random entries
+    for (let i = 10; i < 25; i++) {
+      const template = templateNames[Math.floor(Math.random() * templateNames.length)];
+      const chapters = chapterNames[template];
+      const chapter = chapters[Math.floor(Math.random() * chapters.length)];
+      const sections = sectionNames[chapter];
+      const section = sections[Math.floor(Math.random() * sections.length)];
+      const subsections = subsectionNames[section];
+      const subsection = subsections[Math.floor(Math.random() * subsections.length)];
       
-      resolve(rules);
-    }, 300);
+      rules.push({
+        id: `rule-${i + 1}`,
+        ruleId: `R${String(i + 1).padStart(4, '0')}`,
+        effectiveDate: '01/01/2025',
+        version: `${Math.floor(Math.random() * 3) + 1}.${Math.floor(Math.random() * 10)}`,
+        benefitType: benefitTypes[Math.floor(Math.random() * benefitTypes.length)],
+        businessArea: businessAreas[Math.floor(Math.random() * businessAreas.length)],
+        subBusinessArea: subBusinessAreas[Math.floor(Math.random() * subBusinessAreas.length)],
+        description: sampleDescriptions[Math.floor(Math.random() * sampleDescriptions.length)],
+        templateName: template,
+        serviceId: `SRV${String(i + 1).padStart(3, '0')}`,
+        cmsRegulated: Math.random() > 0.6,
+        chapterName: chapter,
+        sectionName: section,
+        subsectionName: subsection,
+        serviceGroup: serviceGroups[Math.floor(Math.random() * serviceGroups.length)],
+        sourceMapping: `MAP${String(i + 1).padStart(3, '0')}`,
+        tiers: `Tier ${Math.floor(Math.random() * 3) + 1}`,
+        key: `KEY${String(i + 1).padStart(3, '0')}`,
+        rule: sampleRules[Math.floor(Math.random() * sampleRules.length)],
+        isTabular: Math.random() > 0.7,
+        english: sampleEnglishText[Math.floor(Math.random() * sampleEnglishText.length)],
+        englishStatus: statusOptions[Math.floor(Math.random() * statusOptions.length)],
+        spanish: sampleSpanishText[Math.floor(Math.random() * sampleSpanishText.length)],
+        spanishStatus: statusOptions[Math.floor(Math.random() * statusOptions.length)],
+        published: Math.random() > 0.5,
+        createdAt: new Date(Date.now() - Math.random() * 90 * 24 * 60 * 60 * 1000),
+        lastModified: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
+      });
+    }
+    
+    // Add specific RULE - 175 that can be deleted
+    rules.push({
+      id: 'rule-175',
+      ruleId: '175',
+      effectiveDate: '01/01/2025',
+      version: '1.0',
+      benefitType: 'Medical',
+      businessArea: 'Clinical',
+      subBusinessArea: 'Primary Care',
+      description: 'Rule 175 - Test rule for deletion',
+      templateName: 'EOC',
+      serviceId: 'SRV175',
+      cmsRegulated: true,
+      chapterName: 'Chapter 1',
+      sectionName: 'Section 1',
+      subsectionName: '1.1',
+      serviceGroup: 'Medical Services',
+      sourceMapping: 'MAP175',
+      tiers: 'Tier 1',
+      key: 'KEY175',
+      rule: 'This is test rule 175 that will be deleted automatically',
+      isTabular: false,
+      english: 'This is rule 175 content in English',
+      englishStatus: 'Draft',
+      spanish: 'Este es el contenido de la regla 175 en español',
+      spanishStatus: 'Draft',
+      published: false,
+      createdAt: new Date(),
+      lastModified: new Date()
+    });
+    
+    resolve(rules);
   });
 }
