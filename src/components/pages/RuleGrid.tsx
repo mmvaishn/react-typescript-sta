@@ -103,9 +103,9 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     const newWidth = Math.max(60, startWidth + diff); // Minimum width of 60px
     
     setColumnWidths(currentWidths => ({
+      ...currentWidths,
       [resizingColumn]: newWidth
     }));
-      [resizingColumn]: newWidth
 
   const handleDoubleClick = useCallback((columnKey: string) => {
 based on column data
