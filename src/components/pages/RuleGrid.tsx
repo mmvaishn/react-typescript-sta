@@ -767,7 +767,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   };
 
   return (
-    <div className="w-full h-screen flex flex-col overflow-hidden">
+    <div className="w-full h-full flex flex-col overflow-hidden bg-white">
       {/* Compact Header Section */}
       <div className="bg-white border border-gray-200 flex-shrink-0">
         <div className="px-6 py-3 border-b border-gray-200">
@@ -1314,12 +1314,12 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
         </div>
 
         {/* Enhanced Pagination Controls */}
-        <div className="bg-white border-t border-gray-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
+        <div className="bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0 sticky bottom-0 z-20 shadow-lg">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">Rows per page:</span>
+              <span className="text-sm text-gray-700 font-medium">Rows per page:</span>
               <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
-                <SelectTrigger className="w-20 h-8 text-sm">
+                <SelectTrigger className="w-20 h-8 text-sm border-gray-300">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1331,7 +1331,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                 </SelectContent>
               </Select>
             </div>
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-gray-700 font-medium">
               {columnFilteredRules.length > 0 ? (
                 `${startIndex + 1}-${endIndex} of ${columnFilteredRules.length.toLocaleString()} rules`
               ) : (
@@ -1346,34 +1346,34 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               size="sm"
               onClick={handleFirstPage}
               disabled={currentPage === 1 || columnFilteredRules.length === 0}
-              className="h-8 w-8 p-0 border-gray-300 hover:bg-gray-50"
+              className="h-8 w-8 p-0 border-gray-400 hover:bg-blue-50 hover:border-blue-500"
               title="First page (Ctrl+Home)"
             >
-              <CaretDoubleLeft size={14} />
+              <CaretDoubleLeft size={14} className="text-gray-600" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handlePreviousPage}
               disabled={currentPage === 1 || columnFilteredRules.length === 0}
-              className="h-8 w-8 p-0 border-gray-300 hover:bg-gray-50"
+              className="h-8 w-8 p-0 border-gray-400 hover:bg-blue-50 hover:border-blue-500"
               title="Previous page (Ctrl+←)"
             >
-              <CaretLeft size={14} />
+              <CaretLeft size={14} className="text-gray-600" />
             </Button>
             
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">Page</span>
+            <div className="flex items-center gap-2 mx-2">
+              <span className="text-sm text-gray-700 font-medium">Page</span>
               <input
                 type="number"
                 min="1"
                 max={totalPages}
                 value={currentPage}
                 onChange={(e) => handlePageJump(e.target.value)}
-                className="w-16 h-8 text-sm text-center border border-gray-300 rounded"
+                className="w-16 h-8 text-sm text-center border-2 border-gray-300 rounded focus:border-blue-500 focus:outline-none"
                 disabled={columnFilteredRules.length === 0}
               />
-              <span className="text-sm text-gray-700">of {totalPages}</span>
+              <span className="text-sm text-gray-700 font-medium">of {totalPages}</span>
             </div>
             
             <Button
@@ -1381,25 +1381,25 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               size="sm"
               onClick={handleNextPage}
               disabled={currentPage === totalPages || columnFilteredRules.length === 0}
-              className="h-8 w-8 p-0 border-gray-300 hover:bg-gray-50"
+              className="h-8 w-8 p-0 border-gray-400 hover:bg-blue-50 hover:border-blue-500"
               title="Next page (Ctrl+→)"
             >
-              <CaretRight size={14} />
+              <CaretRight size={14} className="text-gray-600" />
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={handleLastPage}
               disabled={currentPage === totalPages || columnFilteredRules.length === 0}
-              className="h-8 w-8 p-0 border-gray-300 hover:bg-gray-50"
+              className="h-8 w-8 p-0 border-gray-400 hover:bg-blue-50 hover:border-blue-500"
               title="Last page (Ctrl+End)"
             >
-              <CaretDoubleRight size={14} />
+              <CaretDoubleRight size={14} className="text-gray-600" />
             </Button>
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">
+            <span className="text-xs text-gray-600 font-medium">
               {columnFilteredRules.length !== safeRules.length && (
                 `Filtered from ${safeRules.length.toLocaleString()} total`
               )}
