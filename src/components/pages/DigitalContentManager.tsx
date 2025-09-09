@@ -286,22 +286,20 @@ export function DigitalContentManager({ onNavigate, onEditRule }: DigitalContent
         </div>
       </div>
 
-      {/* Main Content - Adjusted Height for Activity Log */}
-      <div className={`flex-1 overflow-hidden ${activityLogCollapsed ? '' : 'pb-64'}`}>
-        <div className="h-full">
-          <RuleGrid 
-            rules={rules} 
-            onRuleUpdate={handleRuleUpdate}
-            onRuleCreate={handleRuleCreate}
-            onRuleDelete={handleRuleDelete}
-            onEditRule={onEditRule || (() => {})}
-            onNavigate={onNavigate}
-          />
-        </div>
+      {/* Main Content - Full Height Container for Grid */}
+      <div className="flex-1 overflow-hidden">
+        <RuleGrid 
+          rules={rules} 
+          onRuleUpdate={handleRuleUpdate}
+          onRuleCreate={handleRuleCreate}
+          onRuleDelete={handleRuleDelete}
+          onEditRule={onEditRule || (() => {})}
+          onNavigate={onNavigate}
+        />
       </div>
 
       {/* Activity Log at Bottom */}
-      <div className={`absolute bottom-0 left-0 right-0 z-10 ${activityLogCollapsed ? 'h-auto' : 'h-64'}`}>
+      <div className={`${activityLogCollapsed ? 'h-12' : 'h-64'} border-t border-border flex-shrink-0`}>
         <ActivityLog 
           isCollapsed={activityLogCollapsed}
           onToggle={() => setActivityLogCollapsed(!activityLogCollapsed)}

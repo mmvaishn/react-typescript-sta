@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -15,6 +16,8 @@ import { DatePicker } from '@/components/ui/date-picker';
 import { format, parse, isValid } from 'date-fns';
 import { 
   ChevronDown, 
+  ArrowDown, 
+  ArrowUp,
   Edit, 
   Save, 
   X, 
@@ -25,7 +28,11 @@ import {
   CaretDoubleRight,
   PencilSimple,
   Eye,
-  Trash
+  Trash,
+  DownloadSimple,
+  Columns,
+  Copy,
+  Upload
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
@@ -52,7 +59,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   
   // Pagination state - default to 50 for better performance with large datasets
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useState(20);
   
   // Column resizing state with persistence
   const [columnWidths, setColumnWidths] = useKV('rule-grid-column-widths', {
@@ -245,11 +252,52 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
 
       return true;
     });
-  }, [safeRules, columnFilters]);
 
-  // Pagination calculations
+    // Apply sorting
+    if (sortConfig.key) {
+      filtered.sort((a, b) => {
+        const aValue = a[sortConfig.key!];
+        const bValue = b[sortConfig.key!];
+        
+        // Handle null/undefined values
+        if (aValue == null && bValue == null) return 0;
+        if (aValue == null) return sortConfig.direction === 'asc' ? 1 : -1;
+        if (bValue == null) return sortConfig.direction === 'asc' ? -1 : 1;
+        
+        // Handle different data types
+        if (typeof aValue === 'string' && typeof bValue === 'string') {
+          const comparison = aValue.toLowerCase().localeCompare(bValue.toLowerCase());
+          return sortConfig.direction === 'asc' ? comparison : -comparison;
+        }
+        
+        if (typeof aValue === 'boolean' && typeof bValue === 'boolean') {
+          if (aValue === bValue) return 0;
+          if (sortConfig.direction === 'asc') {
+            return aValue ? 1 : -1;
+          } else {
+            return aValue ? -1 : 1;
+          }
+        }
+        
+        if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+        }
+        
+        // For dates and other types, convert to string and compare
+        const aStr = String(aValue);
+        const bStr = String(bValue);
+        const comparison = aStr.toLowerCase().localeCompare(bStr.toLowerCase());
+        return sortConfig.direction === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    return filtered;
+  }, [safeRules, columnFilters, sortConfig]);
+
+  // Pagination calculations - ensure correct values
   const totalPages = Math.max(1, Math.ceil(columnFilteredRules.length / pageSize));
-  const startIndex = (currentPage - 1) * pageSize;
+  const validCurrentPage = Math.max(1, Math.min(currentPage, totalPages));
+  const startIndex = (validCurrentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, columnFilteredRules.length);
   const paginatedRules = columnFilteredRules.slice(startIndex, endIndex);
   
@@ -354,6 +402,13 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     }
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
+  // Ensure current page is valid when data changes
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
   // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
@@ -403,7 +458,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [currentPage, totalPages, editingRule]);
+  }, [validCurrentPage, totalPages, editingRule]);
 
   // Helper functions for date handling
   const formatDateForDisplay = (dateString: string): string => {
@@ -497,7 +552,8 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
 
   // Pagination handlers
   const handlePageSizeChange = (newPageSize: string) => {
-    setPageSize(parseInt(newPageSize));
+    const newSize = parseInt(newPageSize);
+    setPageSize(newSize);
     setCurrentPage(1);
     
     // Log pagination activity
@@ -577,6 +633,45 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
         details: `Applied filter to ${column} column`,
       });
     }
+  };
+
+  // Sort handler
+  const handleSort = (columnKey: keyof RuleData) => {
+    setSortConfig(prev => {
+      if (prev.key === columnKey) {
+        // Toggle direction if same column
+        return {
+          key: columnKey,
+          direction: prev.direction === 'asc' ? 'desc' : 'asc'
+        };
+      } else {
+        // New column, start with ascending
+        return {
+          key: columnKey,
+          direction: 'asc'
+        };
+      }
+    });
+
+    // Log sort activity
+    if ((window as any).addActivityLog) {
+      (window as any).addActivityLog({
+        user: 'Current User',
+        action: 'sort',
+        target: `Column: ${columnKey}`,
+        details: `Sorted by ${columnKey} column`,
+      });
+    }
+  };
+
+  // Get sort indicator for column header
+  const getSortIndicator = (columnKey: keyof RuleData) => {
+    if (sortConfig.key !== columnKey) {
+      return <ArrowDown size={14} className="text-gray-400" />;
+    }
+    return sortConfig.direction === 'asc' 
+      ? <ArrowUp size={14} className="text-blue-600" />
+      : <ArrowDown size={14} className="text-blue-600" />;
   };
 
   const handleRowSelect = (ruleId: string, checked: boolean) => {
@@ -761,6 +856,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     const selectedRuleId = Array.from(selectedRows)[0];
     const selectedRule = safeRules.find(rule => rule.id === selectedRuleId);
     
+    if (selectedRule?.published) {
+      toast.error('Cannot edit released rules. Released rules are non-editable.');
+      return;
+    }
+    
     if (selectedRule && typeof onEditRule === 'function') {
       // Navigate to the edit page instead of opening the rich text editor
       onEditRule(selectedRule);
@@ -823,7 +923,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     const publishedRules = selectedRules.filter(rule => rule.published);
     
     if (publishedRules.length > 0) {
-      toast.error('Cannot delete published rules. Only unpublished rules can be deleted.');
+      toast.error('Cannot delete released rules. Only unreleased rules can be deleted.');
       return;
     }
     
@@ -899,7 +999,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
 
   const renderCell = (rule: RuleData, field: keyof RuleData, content: string, columnKey: string) => {
     const isEditing = editingRule?.id === rule.id && editingRule?.field === field;
-    const isEditable = !['createdAt', 'lastModified', 'id', 'ruleId', 'cmsRegulated', 'isTabular', 'published'].includes(field);
+    const isEditable = !['createdAt', 'lastModified', 'id', 'ruleId', 'cmsRegulated', 'isTabular', 'published'].includes(field) && !rule.published; // Make cells non-editable when released
     const isRichTextField = field === 'english' || field === 'spanish';
     const isDateField = field === 'effectiveDate';
     
@@ -913,9 +1013,14 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
         >
           <DatePicker
             date={currentDate}
-            onDateChange={(newDate) => handleDateChange(rule, newDate)}
+            onDateChange={rule.published ? undefined : (newDate) => handleDateChange(rule, newDate)} // Disable date picker for released rules
             placeholder="Select date"
-            className="h-7 text-sm w-full border-gray-300 hover:bg-blue-50 justify-start min-w-0"
+            className={`h-7 text-sm w-full justify-start min-w-0 ${
+              rule.published 
+                ? 'border-gray-200 bg-gray-50 cursor-not-allowed text-gray-500 pointer-events-none' 
+                : 'border-gray-300 hover:bg-blue-50'
+            }`}
+            disabled={rule.published}
           />
         </div>
       );
@@ -963,7 +1068,13 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
         }`}
         style={{ width: columnWidths[columnKey] }}
         onClick={() => isEditable && !isDateField && handleCellClick(rule, field)}
-        title={field === 'ruleId' ? 'Rule ID (Auto-generated, non-editable)' : undefined}
+        title={
+          field === 'ruleId' 
+            ? 'Rule ID (Auto-generated, non-editable)' 
+            : rule.published 
+              ? 'Released rules are non-editable'
+              : undefined
+        }
       >
         <div className="flex items-center justify-between">
           <span className="truncate flex-1 text-gray-900">
@@ -1012,12 +1123,12 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   };
 
   return (
-    <div className="w-full h-full flex flex-col overflow-hidden bg-white">
+    <div className="w-full h-full flex flex-col overflow-hidden">
       {/* Compact Header Section */}
       <div className="bg-white border border-gray-200 flex-shrink-0">
         <div className="px-6 py-3 border-b border-gray-200">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+            <div>
               <h2 className="text-base font-semibold text-gray-900">Digital Content Manager - ANOC-EOC</h2>
               <div className="text-sm text-gray-500 bg-gray-50 px-3 py-1 rounded-full">
                 {columnFilteredRules.length > 0 ? (
@@ -1037,6 +1148,70 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               </div>
             </div>
             <div className="flex items-center gap-3">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    variant="outline"
+                    className="w-8 h-8 p-0 border-gray-600 text-gray-600 hover:bg-gray-50"
+                    title="Column visibility"
+                  >
+                    <Columns size={16} />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-64 p-4" align="end">
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Column Visibility</h3>
+                    <div className="space-y-2 max-h-64 overflow-y-auto">
+                      {Object.entries(columnVisibility).map(([key, visible]) => (
+                        <div key={key} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`column-${key}`}
+                            checked={visible}
+                            onCheckedChange={(checked) => handleColumnVisibilityToggle(key, checked as boolean)}
+                          />
+                          <label
+                            htmlFor={`column-${key}`}
+                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          >
+                            {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="pt-2 border-t border-gray-200">
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => {
+                            const allVisible = Object.fromEntries(
+                              Object.keys(columnVisibility).map(key => [key, true])
+                            );
+                            setColumnVisibility(allVisible);
+                          }}
+                          className="flex-1 h-7 text-xs"
+                        >
+                          Show All
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          onClick={() => {
+                            const allHidden = Object.fromEntries(
+                              Object.keys(columnVisibility).map(key => [key, key === 'ruleId'])
+                            );
+                            setColumnVisibility(allHidden);
+                          }}
+                          className="flex-1 h-7 text-xs"
+                        >
+                          Hide All
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
               <Button 
                 size="sm" 
                 variant="ghost"
@@ -1053,33 +1228,68 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                 onClick={handleBulkEdit}
                 disabled={selectedRows.size !== 1}
               >
-                <Edit size={14} />
-                Edit
+                <DownloadSimple size={16} />
               </Button>
               <Button 
                 size="sm" 
                 variant="outline"
-                className="flex items-center gap-2 border-gray-600 text-gray-600 hover:bg-gray-50"
+                className="w-8 h-8 p-0 border-orange-600 text-orange-600 hover:bg-orange-50"
+                onClick={handleCopyRow}
+                disabled={selectedRows.size !== 1}
+                title="Copy selected row"
+              >
+                <Copy size={16} />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="w-8 h-8 p-0 border-purple-600 text-purple-600 hover:bg-purple-50"
+                onClick={handlePublishRows}
+                disabled={selectedRows.size === 0}
+                title="Release selected row(s)"
+              >
+                <Upload size={16} />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="w-8 h-8 p-0 border-blue-600 text-blue-600 hover:bg-blue-50"
+                onClick={handleBulkEdit}
+                disabled={selectedRows.size !== 1 || (selectedRows.size === 1 && safeRules.find(rule => rule.id === Array.from(selectedRows)[0])?.published)}
+                title={
+                  selectedRows.size !== 1 
+                    ? "Select exactly one rule to edit" 
+                    : (selectedRows.size === 1 && safeRules.find(rule => rule.id === Array.from(selectedRows)[0])?.published)
+                      ? "Released rules cannot be edited"
+                      : "Edit selected rule"
+                }
+              >
+                <Edit size={16} />
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                className="w-8 h-8 p-0 border-green-600 text-green-600 hover:bg-green-50"
                 onClick={handleBulkPreview}
                 disabled={selectedRows.size !== 1}
+                title="Preview selected rule"
               >
-                <Eye size={14} />
-                Preview
+                <Eye size={16} />
               </Button>
               <Button 
                 size="sm" 
                 variant="outline"
-                className="flex items-center gap-2 border-red-600 text-red-600 hover:bg-red-50"
+                className="w-8 h-8 p-0 border-red-600 text-red-600 hover:bg-red-50"
                 onClick={handleBulkDelete}
                 disabled={selectedRows.size === 0}
+                title="Delete selected rule(s)"
               >
-                <Trash size={14} />
-                Delete
+                <Trash size={16} />
               </Button>
               <Button 
                 size="sm" 
-                className="flex items-center gap-2 bg-purple-600 text-white hover:bg-purple-700"
                 onClick={handleCreateNewRule}
+                className="flex items-center gap-2 bg-purple-600 text-white hover:bg-purple-700"
               >
                 <Plus size={14} />
                 New Rule
@@ -1087,8 +1297,6 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
             </div>
           </div>
         </div>
-
-
       </div>
 
         {/* Full Height Table Section with Maximum Scrolling Area */}
@@ -1396,21 +1604,11 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                 <div className="flex items-center gap-2">
                   <span>Published</span>
                 </div>
-                <ColumnFilter
-                  columnKey="published"
-                  columnTitle="Published"
-                  values={[]}
-                  selectedValues={[]}
-                  onFilter={() => {}}
-                  filterType="boolean"
-                  booleanValue={columnFilters.published}
-                  onBooleanFilter={(value) => handleColumnFilter('published', value)}
-                />
-              </div>
+              )}
             </div>
 
-            {/* Table Body - Compact rows */}
-            <div className="bg-white">
+            {/* Table Body - Scrollable */}
+            <div className="flex-1 overflow-auto bg-white">
               {paginatedRules.length > 0 ? (
                 paginatedRules.map((rule, index) => (
                 <div 
@@ -1477,6 +1675,37 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   {renderCell(rule, 'tiers', rule.tiers || 'N/A', 'tiers')}
                   {renderCell(rule, 'key', rule.key || 'N/A', 'key')}
 
+                  {columnVisibility.isTabular && (
+                    <div className="w-28 px-3 py-2 border-r border-gray-200 flex items-center justify-center">
+                      <Checkbox 
+                        checked={rule.isTabular || false}
+                        disabled={rule.published} // Disable checkbox for released rules
+                        onCheckedChange={rule.published ? undefined : (checked) => {
+                          const updatedRule = {
+                            ...rule,
+                            isTabular: checked as boolean,
+                            lastModified: new Date()
+                          };
+                          onRuleUpdate(updatedRule);
+                          
+                          // Log the checkbox change activity
+                          if ((window as any).addActivityLog) {
+                            (window as any).addActivityLog({
+                              user: 'Current User',
+                              action: 'edit',
+                              target: `Rule ${rule.ruleId || 'N/A'} - Is Tabular`,
+                              details: `${checked ? 'Enabled' : 'Disabled'} tabular format`,
+                              ruleId: rule.ruleId,
+                              oldValue: rule.isTabular ? 'Yes' : 'No',
+                              newValue: checked ? 'Yes' : 'No',
+                            });
+                          }
+                        }}
+                        className={rule.published ? 'opacity-50 cursor-not-allowed' : ''}
+                        title={rule.published ? 'Released rules cannot be edited' : undefined}
+                      />
+                    </div>
+                  )}
                   
                   <div 
                     className="px-3 py-2 border-r border-gray-200 flex items-center justify-center"
@@ -1569,8 +1798,8 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
           </div>
         </div>
 
-        {/* Enhanced Pagination Controls */}
-        <div className="bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0 sticky bottom-0 z-20 shadow-lg">
+        {/* Enhanced Pagination Controls - Always Visible */}
+        <div className="bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0 z-30">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700 font-medium">Rows per page:</span>
@@ -1601,7 +1830,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               variant="outline"
               size="sm"
               onClick={handleFirstPage}
-              disabled={currentPage === 1 || columnFilteredRules.length === 0}
+              disabled={validCurrentPage === 1 || columnFilteredRules.length === 0}
               className="h-8 w-8 p-0 border-gray-400 hover:bg-blue-50 hover:border-blue-500"
               title="First page (Ctrl+Home)"
             >
@@ -1611,7 +1840,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               variant="outline"
               size="sm"
               onClick={handlePreviousPage}
-              disabled={currentPage === 1 || columnFilteredRules.length === 0}
+              disabled={validCurrentPage === 1 || columnFilteredRules.length === 0}
               className="h-8 w-8 p-0 border-gray-400 hover:bg-blue-50 hover:border-blue-500"
               title="Previous page (Ctrl+←)"
             >
@@ -1624,7 +1853,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                 type="number"
                 min="1"
                 max={totalPages}
-                value={currentPage}
+                value={validCurrentPage}
                 onChange={(e) => handlePageJump(e.target.value)}
                 className="w-16 h-8 text-sm text-center border-2 border-gray-300 rounded focus:border-blue-500 focus:outline-none"
                 disabled={columnFilteredRules.length === 0}
@@ -1636,7 +1865,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               variant="outline"
               size="sm"
               onClick={handleNextPage}
-              disabled={currentPage === totalPages || columnFilteredRules.length === 0}
+              disabled={validCurrentPage === totalPages || columnFilteredRules.length === 0}
               className="h-8 w-8 p-0 border-gray-400 hover:bg-blue-50 hover:border-blue-500"
               title="Next page (Ctrl+→)"
             >
@@ -1646,7 +1875,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               variant="outline"
               size="sm"
               onClick={handleLastPage}
-              disabled={currentPage === totalPages || columnFilteredRules.length === 0}
+              disabled={validCurrentPage === totalPages || columnFilteredRules.length === 0}
               className="h-8 w-8 p-0 border-gray-400 hover:bg-blue-50 hover:border-blue-500"
               title="Last page (Ctrl+End)"
             >
@@ -1735,7 +1964,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                     <p className="text-sm">{previewRule.cmsRegulated ? 'Yes' : 'No'}</p>
                   </div>
                   <div>
-                    <label className="text-sm font-semibold text-gray-500">Published</label>
+                    <label className="text-sm font-semibold text-gray-500">Release</label>
                     <p className="text-sm">{previewRule.published ? 'Yes' : 'No'}</p>
                   </div>
                   <div>
