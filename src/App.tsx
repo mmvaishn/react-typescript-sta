@@ -50,6 +50,8 @@ function App() {
         return <MedicareEOCMasterList onNavigate={setCurrentPage} />
       case 'collaborate':
         return <Collaborate />
+        case 'masterlist':
+        return <MasterList />
       case 'generate':
         return <Generate />
       case 'publish':
