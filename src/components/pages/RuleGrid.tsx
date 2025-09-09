@@ -1043,23 +1043,22 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                 />
               </div>
               <ResizableHeader columnKey="ruleId" filterComponent={
-                  columnKey="ruleId"
+                <ColumnFilter
                   columnKey="ruleId"
                   values={uniqueValues.ruleId}
                   selectedValues={[]}
                   onFilter={() => {}}
                   filterType="text"
-                  filterType="text"
                   textValue={columnFilters.ruleId}
                   onTextFilter={(value) => handleColumnFilter('ruleId', value)}
+                />
               }>
-                Rule ID
                 Rule ID
               </ResizableHeader>
               
               <ResizableHeader columnKey="effectiveDate" filterComponent={
+                <ColumnFilter
                   columnKey="effectiveDate"
-                  columnTitle="Effective Date"
                   columnTitle="Effective Date"
                   values={uniqueValues.effectiveDate}
                   selectedValues={[]}
@@ -1108,7 +1107,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               </ResizableHeader>
               
               <ResizableHeader columnKey="subBusinessArea" filterComponent={
-              <ResizableHeader columnKey="subBusinessArea" filterComponent={
+                <ColumnFilter
                   columnKey="subBusinessArea"
                   columnTitle="Sub-Business Area"
                   values={uniqueValues.subBusinessArea}
