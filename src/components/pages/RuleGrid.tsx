@@ -1043,28 +1043,27 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                 />
               </div>
               <ResizableHeader columnKey="ruleId" filterComponent={
-                <ColumnFilter
                   columnKey="ruleId"
-                  columnTitle="Rule ID"
+                  columnKey="ruleId"
                   values={uniqueValues.ruleId}
                   selectedValues={[]}
                   onFilter={() => {}}
                   filterType="text"
+                  filterType="text"
                   textValue={columnFilters.ruleId}
                   onTextFilter={(value) => handleColumnFilter('ruleId', value)}
-                />
               }>
+                Rule ID
                 Rule ID
               </ResizableHeader>
               
               <ResizableHeader columnKey="effectiveDate" filterComponent={
-                <ColumnFilter
                   columnKey="effectiveDate"
+                  columnTitle="Effective Date"
                   columnTitle="Effective Date"
                   values={uniqueValues.effectiveDate}
                   selectedValues={[]}
                   onFilter={() => {}}
-                  filterType="text"
                   textValue={columnFilters.effectiveDate}
                   onTextFilter={(value) => handleColumnFilter('effectiveDate', value)}
                 />
@@ -1103,13 +1102,13 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                   values={uniqueValues.businessArea}
                   selectedValues={columnFilters.businessArea}
                   onFilter={(values) => handleColumnFilter('businessArea', values)}
-                />
+                  onFilter={(values) => handleColumnFilter('businessArea', values)}
               }>
                 Business Area
               </ResizableHeader>
               
               <ResizableHeader columnKey="subBusinessArea" filterComponent={
-                <ColumnFilter
+              <ResizableHeader columnKey="subBusinessArea" filterComponent={
                   columnKey="subBusinessArea"
                   columnTitle="Sub-Business Area"
                   values={uniqueValues.subBusinessArea}
