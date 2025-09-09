@@ -233,11 +233,19 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     return filtered;
   }, [safeRules, columnFilters, sortConfig]);
 
-  // Pagination calculations
+  // Pagination calculations - ensure correct values
   const totalPages = Math.max(1, Math.ceil(columnFilteredRules.length / pageSize));
-  const startIndex = (currentPage - 1) * pageSize;
+  const validCurrentPage = Math.max(1, Math.min(currentPage, totalPages));
+  const startIndex = (validCurrentPage - 1) * pageSize;
   const endIndex = Math.min(startIndex + pageSize, columnFilteredRules.length);
   const paginatedRules = columnFilteredRules.slice(startIndex, endIndex);
+
+  // Ensure current page is valid when data changes
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   // Reset to first page when filters change
   useEffect(() => {
@@ -288,7 +296,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [currentPage, totalPages, editingRule]);
+  }, [validCurrentPage, totalPages, editingRule]);
 
   // Helper functions for date handling
   const formatDateForDisplay = (dateString: string): string => {
@@ -382,7 +390,8 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
 
   // Pagination handlers
   const handlePageSizeChange = (newPageSize: string) => {
-    setPageSize(parseInt(newPageSize));
+    const newSize = parseInt(newPageSize);
+    setPageSize(newSize);
     setCurrentPage(1);
     
     // Log pagination activity
@@ -1148,7 +1157,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   };
 
   return (
-    <div className="w-full h-screen flex flex-col overflow-hidden">
+    <div className="w-full h-full flex flex-col overflow-hidden">
       {/* Compact Header Section */}
       <div className="bg-white border border-gray-200 flex-shrink-0">
         <div className="px-6 py-3 border-b border-gray-200">
@@ -1305,7 +1314,6 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                 size="sm" 
                 onClick={handleCreateNewRule}
                 className="flex items-center gap-2 bg-purple-600 text-white hover:bg-purple-700"
-                onClick={handleCreateNewRule}
               >
                 <Plus size={14} />
                 New Rule
@@ -1313,252 +1321,18 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
             </div>
           </div>
         </div>
-
-
       </div>
 
-        {/* Full Height Table Section with Maximum Scrolling Area */}
-        <div className="flex-1 overflow-auto">
-          <div className="min-w-[4350px] h-full">
-            {/* Table Header */}
-            <div className="flex bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-500 sticky top-0 z-10">
+        {/* Table Container with Scrollable Body */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <div className="min-w-[4350px] flex flex-col h-full">
+            {/* Table Header - Fixed */}
+            <div className="flex bg-gray-50 border-b border-gray-200 text-sm font-medium text-gray-500 flex-shrink-0">
               <div className="w-12 px-3 py-2 border-r border-gray-200">
                 <Checkbox 
                   checked={paginatedRules.length > 0 && selectedRows.size === paginatedRules.length}
                   onCheckedChange={handleSelectAll}
                   title={`Select all ${paginatedRules.length} rules on current page`}
-                />
-              </div>
-              <div className="w-24 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Rule ID</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="ruleId"
-                  columnTitle="Rule ID"
-                  values={uniqueValues.ruleId}
-                  selectedValues={[]}
-                  onFilter={() => {}}
-                  filterType="text"
-                  textValue={columnFilters.ruleId}
-                  onTextFilter={(value) => handleColumnFilter('ruleId', value)}
-                />
-              </div>
-              <div className="w-40 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Effective Date</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="effectiveDate"
-                  columnTitle="Effective Date"
-                  values={uniqueValues.effectiveDate}
-                  selectedValues={[]}
-                  onFilter={() => {}}
-                  filterType="text"
-                  textValue={columnFilters.effectiveDate}
-                  onTextFilter={(value) => handleColumnFilter('effectiveDate', value)}
-                />
-              </div>
-              <div className="w-24 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Version</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="version"
-                  columnTitle="Version"
-                  values={uniqueValues.version}
-                  selectedValues={columnFilters.version}
-                  onFilter={(values) => handleColumnFilter('version', values)}
-                />
-              </div>
-              <div className="w-40 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Benefit Type</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="benefitType"
-                  columnTitle="Benefit Type"
-                  values={uniqueValues.benefitType}
-                  selectedValues={columnFilters.benefitType}
-                  onFilter={(values) => handleColumnFilter('benefitType', values)}
-                />
-              </div>
-              <div className="w-40 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Business Area</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="businessArea"
-                  columnTitle="Business Area"
-                  values={uniqueValues.businessArea}
-                  selectedValues={columnFilters.businessArea}
-                  onFilter={(values) => handleColumnFilter('businessArea', values)}
-                />
-              </div>
-              <div className="w-48 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Sub-Business Area</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="subBusinessArea"
-                  columnTitle="Sub-Business Area"
-                  values={uniqueValues.subBusinessArea}
-                  selectedValues={columnFilters.subBusinessArea}
-                  onFilter={(values) => handleColumnFilter('subBusinessArea', values)}
-                />
-              </div>
-              <div className="w-64 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Description</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="description"
-                  columnTitle="Description"
-                  values={[]}
-                  selectedValues={[]}
-                  onFilter={() => {}}
-                  filterType="text"
-                  textValue={columnFilters.description}
-                  onTextFilter={(value) => handleColumnFilter('description', value)}
-                />
-              </div>
-              <div className="w-48 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Template Name</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="templateName"
-                  columnTitle="Template Name"
-                  values={uniqueValues.templateName}
-                  selectedValues={columnFilters.templateName}
-                  onFilter={(values) => handleColumnFilter('templateName', values)}
-                />
-              </div>
-              <div className="w-32 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Service ID</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="serviceId"
-                  columnTitle="Service ID"
-                  values={uniqueValues.serviceId}
-                  selectedValues={columnFilters.serviceId}
-                  onFilter={(values) => handleColumnFilter('serviceId', values)}
-                />
-              </div>
-              <div className="w-32 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>CMS Regulated</span>
-                </div>
-                <ColumnFilter
-                  columnKey="cmsRegulated"
-                  columnTitle="CMS Regulated"
-                  values={[]}
-                  selectedValues={[]}
-                  onFilter={() => {}}
-                  filterType="boolean"
-                  booleanValue={columnFilters.cmsRegulated}
-                  onBooleanFilter={(value) => handleColumnFilter('cmsRegulated', value)}
-                />
-              </div>
-              <div className="w-48 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Chapter Name</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="chapterName"
-                  columnTitle="Chapter Name"
-                  values={uniqueValues.chapterName}
-                  selectedValues={columnFilters.chapterName}
-                  onFilter={(values) => handleColumnFilter('chapterName', values)}
-                />
-              </div>
-              <div className="w-48 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Section Name</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="sectionName"
-                  columnTitle="Section Name"
-                  values={uniqueValues.sectionName}
-                  selectedValues={columnFilters.sectionName}
-                  onFilter={(values) => handleColumnFilter('sectionName', values)}
-                />
-              </div>
-              <div className="w-48 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Subsection Name</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="subsectionName"
-                  columnTitle="Subsection Name"
-                  values={uniqueValues.subsectionName}
-                  selectedValues={columnFilters.subsectionName}
-                  onFilter={(values) => handleColumnFilter('subsectionName', values)}
-                />
-              </div>
-              <div className="w-32 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Service Group</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="serviceGroup"
-                  columnTitle="Service Group"
-                  values={uniqueValues.serviceGroup}
-                  selectedValues={columnFilters.serviceGroup}
-                  onFilter={(values) => handleColumnFilter('serviceGroup', values)}
-                />
-              </div>
-              <div className="w-40 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Source Mapping</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="sourceMapping"
-                  columnTitle="Source Mapping"
-                  values={uniqueValues.sourceMapping}
-                  selectedValues={columnFilters.sourceMapping}
-                  onFilter={(values) => handleColumnFilter('sourceMapping', values)}
-                />
-              </div>
-              <div className="w-32 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Tiers</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="tiers"
-                  columnTitle="Tiers"
-                  values={uniqueValues.tiers}
-                  selectedValues={columnFilters.tiers}
-                  onFilter={(values) => handleColumnFilter('tiers', values)}
-                />
-              </div>
-              <div className="w-32 px-3 py-2 border-r border-gray-200 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span>Key</span>
-                  <ChevronDown size={14} className="text-gray-400" />
-                </div>
-                <ColumnFilter
-                  columnKey="key"
-                  columnTitle="Key"
-                  values={uniqueValues.key}
-                  selectedValues={columnFilters.key}
-                  onFilter={(values) => handleColumnFilter('key', values)}
                 />
               </div>
               {columnVisibility.ruleId && (
@@ -2025,8 +1799,8 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               )}
             </div>
 
-            {/* Table Body - Compact rows */}
-            <div className="bg-white">
+            {/* Table Body - Scrollable */}
+            <div className="flex-1 overflow-auto bg-white">
               {paginatedRules.length > 0 ? (
                 paginatedRules.map((rule, index) => (
                 <div 
@@ -2232,8 +2006,8 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
           </div>
         </div>
 
-        {/* Enhanced Pagination Controls */}
-        <div className="bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0 sticky bottom-0 z-20 shadow-lg">
+        {/* Enhanced Pagination Controls - Always Visible */}
+        <div className="bg-white border-t border-gray-200 px-6 py-4 flex items-center justify-between flex-shrink-0 z-30">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700 font-medium">Rows per page:</span>
@@ -2264,7 +2038,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               variant="outline"
               size="sm"
               onClick={handleFirstPage}
-              disabled={currentPage === 1 || columnFilteredRules.length === 0}
+              disabled={validCurrentPage === 1 || columnFilteredRules.length === 0}
               className="h-8 w-8 p-0 border-gray-400 hover:bg-blue-50 hover:border-blue-500"
               title="First page (Ctrl+Home)"
             >
@@ -2274,7 +2048,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               variant="outline"
               size="sm"
               onClick={handlePreviousPage}
-              disabled={currentPage === 1 || columnFilteredRules.length === 0}
+              disabled={validCurrentPage === 1 || columnFilteredRules.length === 0}
               className="h-8 w-8 p-0 border-gray-400 hover:bg-blue-50 hover:border-blue-500"
               title="Previous page (Ctrl+←)"
             >
@@ -2287,7 +2061,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
                 type="number"
                 min="1"
                 max={totalPages}
-                value={currentPage}
+                value={validCurrentPage}
                 onChange={(e) => handlePageJump(e.target.value)}
                 className="w-16 h-8 text-sm text-center border-2 border-gray-300 rounded focus:border-blue-500 focus:outline-none"
                 disabled={columnFilteredRules.length === 0}
@@ -2299,7 +2073,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               variant="outline"
               size="sm"
               onClick={handleNextPage}
-              disabled={currentPage === totalPages || columnFilteredRules.length === 0}
+              disabled={validCurrentPage === totalPages || columnFilteredRules.length === 0}
               className="h-8 w-8 p-0 border-gray-400 hover:bg-blue-50 hover:border-blue-500"
               title="Next page (Ctrl+→)"
             >
@@ -2309,7 +2083,7 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               variant="outline"
               size="sm"
               onClick={handleLastPage}
-              disabled={currentPage === totalPages || columnFilteredRules.length === 0}
+              disabled={validCurrentPage === totalPages || columnFilteredRules.length === 0}
               className="h-8 w-8 p-0 border-gray-400 hover:bg-blue-50 hover:border-blue-500"
               title="Last page (Ctrl+End)"
             >
