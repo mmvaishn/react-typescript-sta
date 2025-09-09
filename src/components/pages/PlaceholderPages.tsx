@@ -5569,3 +5569,19 @@ export function AskBenny() {
     </div>
   )
 }
+
+export function Lookups() {
+  return (
+    <div className="p-4">
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Look-ups</h1>
+          <p className="text-muted-foreground mt-1">Manage lookup tables and reference data</p>
+        </div>
+      </div>
+      <div className="bg-card rounded-lg border border-border p-8 text-center">
+        <p className="text-muted-foreground">Look-ups features coming soon...</p>
+      </div>
+    </div>
+  )
+}

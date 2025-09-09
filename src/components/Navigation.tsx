@@ -9,7 +9,8 @@ import {
   Palette,
   CaretLeft,
   Robot,
-  ListBullets
+  ListBullets,
+  MagnifyingGlass
 } from '@phosphor-icons/react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,7 @@ const navigationItems = [
   { id: 'dcm', label: 'Digital Content Manager', icon: Palette },
   { id: 'global-template', label: 'Global Template', icon: FolderOpen },
   { id: 'masterlist', label: 'Master List', icon: ListBullets },
+  { id: 'lookups', label: 'Look-ups', icon: MagnifyingGlass },
   { id: 'collaborate', label: 'Collaborate', icon: Users },
   { id: 'generate', label: 'Generate', icon: FilePdf },
   { id: 'publish', label: 'Publish', icon: Export },
