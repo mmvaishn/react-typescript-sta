@@ -34,14 +34,14 @@ export function CMLDialog({ open, onClose, onInsert }: CMLDialogProps) {
   // Filter rules based on search and filter criteria
   const filteredRules = Array.isArray(rules) ? rules.filter(rule => {
     const matchesSearch = !searchQuery || 
-      rule.templateName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rule.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rule.ruleId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      rule.businessArea?.toLowerCase().includes(searchQuery.toLowerCase());
+      (rule.templateName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (rule.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (rule.ruleId || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (rule.businessArea || '').toLowerCase().includes(searchQuery.toLowerCase());
     
     const matchesFilter = filterBy === 'all' || 
-      rule.benefitType?.toLowerCase() === filterBy.toLowerCase() ||
-      rule.businessArea?.toLowerCase() === filterBy.toLowerCase();
+      (rule.benefitType || '').toLowerCase() === filterBy.toLowerCase() ||
+      (rule.businessArea || '').toLowerCase() === filterBy.toLowerCase();
     
     return matchesSearch && matchesFilter;
   }) : [];
@@ -64,7 +64,8 @@ export function CMLDialog({ open, onClose, onInsert }: CMLDialogProps) {
   };
 
   const getStatusColor = (status?: string) => {
-    switch (status?.toLowerCase()) {
+    const statusStr = (status || '').toLowerCase();
+    switch (statusStr) {
       case 'active':
         return 'bg-green-100 text-green-800 border-green-200';
       case 'draft':

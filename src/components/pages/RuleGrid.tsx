@@ -121,6 +121,9 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
     effectiveDate: [...new Set(safeRules.map(r => r.effectiveDate).filter(Boolean))],
     version: [...new Set(safeRules.map(r => r.version).filter(Boolean))],
     benefitType: [...new Set(safeRules.map(r => r.benefitType).filter(Boolean))],
+    businessArea: [...new Set(safeRules.map(r => r.businessArea).filter(Boolean))],
+    subBusinessArea: [...new Set(safeRules.map(r => r.subBusinessArea).filter(Boolean))],
+    templateName: [...new Set(safeRules.map(r => r.templateName).filter(Boolean))],
     serviceId: [...new Set(safeRules.map(r => r.serviceId).filter(Boolean))],
     chapterName: [...new Set(safeRules.map(r => r.chapterName).filter(Boolean))],
     sectionName: [...new Set(safeRules.map(r => r.sectionName).filter(Boolean))],
@@ -136,13 +139,13 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
   // Apply column filters directly to rules
   const columnFilteredRules = useMemo(() => {
     return safeRules.filter(rule => {
-      // Text filters
-      if (columnFilters.ruleId && !rule.ruleId?.toLowerCase().includes(columnFilters.ruleId.toLowerCase())) return false;
-      if (columnFilters.effectiveDate && !rule.effectiveDate?.toLowerCase().includes(columnFilters.effectiveDate.toLowerCase())) return false;
-      if (columnFilters.description && !rule.description?.toLowerCase().includes(columnFilters.description.toLowerCase())) return false;
+      // Text filters - safely handle undefined/null values
+      if (columnFilters.ruleId && !(rule.ruleId || '').toLowerCase().includes(columnFilters.ruleId.toLowerCase())) return false;
+      if (columnFilters.effectiveDate && !(rule.effectiveDate || '').toLowerCase().includes(columnFilters.effectiveDate.toLowerCase())) return false;
+      if (columnFilters.description && !(rule.description || '').toLowerCase().includes(columnFilters.description.toLowerCase())) return false;
 
-      if (columnFilters.english && !rule.english?.toLowerCase().includes(columnFilters.english.toLowerCase())) return false;
-      if (columnFilters.spanish && !rule.spanish?.toLowerCase().includes(columnFilters.spanish.toLowerCase())) return false;
+      if (columnFilters.english && !(rule.english || '').toLowerCase().includes(columnFilters.english.toLowerCase())) return false;
+      if (columnFilters.spanish && !(rule.spanish || '').toLowerCase().includes(columnFilters.spanish.toLowerCase())) return false;
 
       // Multi-select filters
       if (columnFilters.version.length > 0 && !columnFilters.version.includes(rule.version || '')) return false;
@@ -876,9 +879,6 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
               autoFocus
             />
           )}
-              autoFocus
-            />
-          )}
           <div className="flex gap-1 flex-shrink-0">
             <Button size="sm" variant="outline" onClick={handleSaveEdit} className="h-6 w-6 p-0 border-green-300 hover:bg-green-50">
               <Save size={10} className="text-green-600" />
@@ -933,7 +933,8 @@ export function RuleGrid({ rules, onRuleUpdate, onRuleCreate, onRuleDelete, onEd
       return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Unknown</Badge>;
     }
     
-    switch (status.toLowerCase()) {
+    const statusStr = String(status).toLowerCase();
+    switch (statusStr) {
       case 'complete':
         return <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">✓ Complete</Badge>;
       case 'in progress':

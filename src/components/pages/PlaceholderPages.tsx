@@ -412,40 +412,40 @@ function QueuedCollateral() {
   const filteredAndSortedData = useMemo(() => {
     let filtered = queuedData.filter(item => {
       // Apply column filters
-      if (columnFilters.batchId && !item.batchId.toLowerCase().includes(columnFilters.batchId.toLowerCase())) {
+      if (columnFilters.batchId && !(item.batchId || '').toLowerCase().includes(columnFilters.batchId.toLowerCase())) {
         return false
       }
-      if (columnFilters.source && !item.source.toLowerCase().includes(columnFilters.source.toLowerCase())) {
+      if (columnFilters.source && !(item.source || '').toLowerCase().includes(columnFilters.source.toLowerCase())) {
         return false
       }
-      if (columnFilters.mlType && !item.mlType.toLowerCase().includes(columnFilters.mlType.toLowerCase())) {
+      if (columnFilters.mlType && !(item.mlType || '').toLowerCase().includes(columnFilters.mlType.toLowerCase())) {
         return false
       }
-      if (columnFilters.collateralName && !item.collateralName.toLowerCase().includes(columnFilters.collateralName.toLowerCase())) {
+      if (columnFilters.collateralName && !(item.collateralName || '').toLowerCase().includes(columnFilters.collateralName.toLowerCase())) {
         return false
       }
-      if (columnFilters.fontType && !item.fontType.toLowerCase().includes(columnFilters.fontType.toLowerCase())) {
+      if (columnFilters.fontType && !(item.fontType || '').toLowerCase().includes(columnFilters.fontType.toLowerCase())) {
         return false
       }
-      if (columnFilters.productName && !item.productName.toLowerCase().includes(columnFilters.productName.toLowerCase())) {
+      if (columnFilters.productName && !(item.productName || '').toLowerCase().includes(columnFilters.productName.toLowerCase())) {
         return false
       }
-      if (columnFilters.folderName && !item.folderName.toLowerCase().includes(columnFilters.folderName.toLowerCase())) {
+      if (columnFilters.folderName && !(item.folderName || '').toLowerCase().includes(columnFilters.folderName.toLowerCase())) {
         return false
       }
-      if (columnFilters.versionNumber && !item.versionNumber.toLowerCase().includes(columnFilters.versionNumber.toLowerCase())) {
+      if (columnFilters.versionNumber && !(item.versionNumber || '').toLowerCase().includes(columnFilters.versionNumber.toLowerCase())) {
         return false
       }
-      if (columnFilters.status && !item.status.toLowerCase().includes(columnFilters.status.toLowerCase())) {
+      if (columnFilters.status && !(item.status || '').toLowerCase().includes(columnFilters.status.toLowerCase())) {
         return false
       }
-      if (columnFilters.queuedDate && !item.queuedDate.toLowerCase().includes(columnFilters.queuedDate.toLowerCase())) {
+      if (columnFilters.queuedDate && !(item.queuedDate || '').toLowerCase().includes(columnFilters.queuedDate.toLowerCase())) {
         return false
       }
-      if (columnFilters.processedDate && !item.processedDate.toLowerCase().includes(columnFilters.processedDate.toLowerCase())) {
+      if (columnFilters.processedDate && !(item.processedDate || '').toLowerCase().includes(columnFilters.processedDate.toLowerCase())) {
         return false
       }
-      if (columnFilters.userName && !item.userName.toLowerCase().includes(columnFilters.userName.toLowerCase())) {
+      if (columnFilters.userName && !(item.userName || '').toLowerCase().includes(columnFilters.userName.toLowerCase())) {
         return false
       }
       

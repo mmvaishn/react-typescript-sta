@@ -201,7 +201,8 @@ export function TinyMCEEditor({
       return <Badge variant="secondary" className="bg-gray-100 text-gray-800">Pending</Badge>;
     }
     
-    switch (status.toLowerCase()) {
+    const statusStr = String(status).toLowerCase();
+    switch (statusStr) {
       case 'complete':
         return <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">✓ Complete</Badge>;
       case 'in progress':

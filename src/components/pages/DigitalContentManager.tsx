@@ -98,10 +98,11 @@ export function DigitalContentManager({ onNavigate, onEditRule }: DigitalContent
 
       // Process each extracted item
       for (const item of extractedData) {
-        const existingRule = rules.find(rule => 
-          rule.templateName?.toLowerCase().includes(item.title.toLowerCase()) ||
-          item.title.toLowerCase().includes(rule.templateName?.toLowerCase() || '')
-        );
+        const existingRule = rules.find(rule => {
+          const ruleTemplateName = (rule.templateName || '').toLowerCase();
+          const itemTitle = (item.title || '').toLowerCase();
+          return ruleTemplateName.includes(itemTitle) || itemTitle.includes(ruleTemplateName);
+        });
 
         if (existingRule) {
           // Update existing rule with new data

@@ -37,7 +37,7 @@ export function ColumnFilter({
   const [isOpen, setIsOpen] = useState(false);
 
   const filteredValues = values.filter(value => 
-    value.toLowerCase().includes(searchTerm.toLowerCase())
+    String(value || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const hasActiveFilter = () => {

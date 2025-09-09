@@ -107,14 +107,14 @@ export function AdvancedFilter({ rules, onFiltersChange }: AdvancedFilterProps) 
           rule.english, rule.spanish
         ];
         if (!searchableFields.some(field => 
-          field?.toLowerCase().includes(searchTerm)
+          (field || '').toLowerCase().includes(searchTerm)
         )) {
           return false;
         }
       }
 
       // Rule ID filter
-      if (filters.ruleId && !rule.ruleId?.toLowerCase().includes(filters.ruleId.toLowerCase())) {
+      if (filters.ruleId && !(rule.ruleId || '').toLowerCase().includes(filters.ruleId.toLowerCase())) {
         return false;
       }
 
@@ -165,13 +165,13 @@ export function AdvancedFilter({ rules, onFiltersChange }: AdvancedFilterProps) 
       }
 
       // Text content filters
-      if (filters.rule && !rule.rule?.toLowerCase().includes(filters.rule.toLowerCase())) {
+      if (filters.rule && !(rule.rule || '').toLowerCase().includes(filters.rule.toLowerCase())) {
         return false;
       }
-      if (filters.english && !rule.english?.toLowerCase().includes(filters.english.toLowerCase())) {
+      if (filters.english && !(rule.english || '').toLowerCase().includes(filters.english.toLowerCase())) {
         return false;
       }
-      if (filters.spanish && !rule.spanish?.toLowerCase().includes(filters.spanish.toLowerCase())) {
+      if (filters.spanish && !(rule.spanish || '').toLowerCase().includes(filters.spanish.toLowerCase())) {
         return false;
       }
 
